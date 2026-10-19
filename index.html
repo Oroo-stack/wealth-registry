@@ -435,7 +435,7 @@ tbody tr:hover .row-actions{opacity:1}
           <div class="fg"><label>Sub-county</label><input id="af-subcounty"></div>
           <div class="fg"><label>Locality</label><input id="af-locality"></div>
           <div class="fg"><label>Parcel / title number</label><input id="af-parcel"></div>
-          <div class="fg form-full"><label>Physical address / directions</label><input id="af-address"></div>
+          <div class="fg form-full"><label>Physical address / directions</label><input id="af-address" oninput="this.dataset.auto='0'"></div>
         </div>
       </details>
     </div>
@@ -736,6 +736,11 @@ let currentAssetId = null;
 let currentAssetTab = 'overview';
 let mapInstance = null, mapMarker = null;
 let editAssetId = null, editIncomeId = null, editExpenseId = null, editDocumentId = null, editInspectionId = null, editLiabilityId = null;
+// Sync memory: what the Sheet held at the last pull/push (so we only upload what THIS device changed)
+const LS_SNAP='fwr_snap_v1', LS_PULL='fwr_lastpull_v1';
+let snap=(function(){ try{ return JSON.parse(localStorage.getItem(LS_SNAP)||'{}'); }catch(e){ return {}; } })();
+let lastPull=(function(){ try{ return JSON.parse(localStorage.getItem(LS_PULL)||'null'); }catch(e){ return null; } })();
+function saveSnap(cols){ (cols||COLLECTIONS).forEach(c=>{ snap[c]=JSON.stringify(db[c]||[]); }); try{ localStorage.setItem(LS_SNAP,JSON.stringify(snap)); }catch(e){} }
 // Privacy + goals state (declared before init() so first render can use it)
 const LS_PRIV = 'fwr_privacy_v1';
 let priv = (function(){ try { return Object.assign({pinHash:'', shield:true}, JSON.parse(localStorage.getItem(LS_PRIV)||'{}')); } catch(e){ return {pinHash:'', shield:true}; } })();
@@ -759,7 +764,8 @@ async function syncFromSheet(opts){
   if (!settings.url || !settings.token) { setSyncBadge('warn','No sheet connected — go to Settings'); return false; }
   setSyncBadge('warn','Loading…');
   try {
-    const res = await fetch(settings.url + '?token=' + encodeURIComponent(settings.token), { method:'GET' });
+    const sep = settings.url.indexOf('?')>-1 ? '&' : '?';
+    const res = await fetch(settings.url + sep + 'token=' + encodeURIComponent(settings.token) + '&_=' + Date.now(), { method:'GET', cache:'no-store' });
     const json = JSON.parse(await res.text());
     if (json.error) throw new Error(json.error);
     const incoming = json.data || {};
@@ -773,12 +779,16 @@ async function syncFromSheet(opts){
     const prevAssets = (db.Assets||[]).slice();
     COLLECTIONS.forEach(c => { if (Array.isArray(incoming[c])) db[c] = incoming[c]; else if (!Array.isArray(db[c])) db[c] = []; }); // a collection the backend doesn't have yet keeps its local copy
     if ((db.Assets||[]).length && !('unitCount' in db.Assets[0])) db.Assets.forEach(a=>{ const o=prevAssets.find(x=>x.id===a.id); if(o){ a.unitCount=o.unitCount||0; a.unitRent=o.unitRent||0; a.unitOverrides=o.unitOverrides||'[]'; } });
+    saveSnap(COLLECTIONS.filter(c=>Array.isArray(incoming[c])));
+    lastPull = { at:new Date().toISOString(), counts:Object.fromEntries(COLLECTIONS.map(c=>[c,Array.isArray(incoming[c])?incoming[c].length:null])) };
+    try{ localStorage.setItem(LS_PULL,JSON.stringify(lastPull)); }catch(e){}
     localStorage.setItem(LS_KEY, JSON.stringify(db));
     setSyncBadge('ok','Synced · ' + new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}));
     renderCurrent();
     return true;
   } catch(e){
     setSyncBadge('err','Sync failed — using cached data');
+    if(!opts.silent) toast('⚠ Sync failed: '+(e.message||e)+' — showing the data saved on this device. Check your connection and that the Web App is shared with "Anyone".', true);
     return false;
   }
 }
@@ -789,7 +799,8 @@ async function pushToSheet(){
   setSyncBadge('warn','Saving…');
   try {
     const payload = {};
-    COLLECTIONS.filter(c=>c!=='Audit_Log').forEach(c => { payload[c] = db[c]; });
+    const changed = COLLECTIONS.filter(c=>c!=='Audit_Log' && (snap[c]===undefined || JSON.stringify(db[c]||[])!==snap[c]));
+    changed.forEach(c => { payload[c] = db[c]; });
     payload.auditEntries = pendingAudit;
     const form = new FormData();
     form.append('token', settings.token);
@@ -799,6 +810,7 @@ async function pushToSheet(){
     const json = JSON.parse(await res.text());
     if (!json.ok) throw new Error(json.error || 'Sheet returned error');
     pendingAudit = [];
+    saveSnap(changed);
     setSyncBadge('ok','Saved · ' + new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}));
     return true;
   } catch(e){
@@ -935,6 +947,17 @@ try { matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>
 function setTheme(p){
   localStorage.setItem('app_theme', JSON.stringify(Object.assign(getTheme(),p))); applyTheme();
   if (document.getElementById('nav-settings')?.classList.contains('active')) renderSettings();
+}
+function syncInfoHTML(){
+  ensureColl();
+  const rows=COLLECTIONS.filter(c=>c!=='Audit_Log').map(c=>{
+    const dev=(db[c]||[]).length, sh=lastPull?lastPull.counts[c]:undefined, bad=(sh!==undefined&&sh!==null&&sh!==dev);
+    return `<tr><td>${c}</td><td>${sh===undefined||sh===null?'—':sh}</td><td class="${bad?'amber':''}">${dev}${bad?' ⚠':''}</td></tr>`; }).join('');
+  const when=lastPull?new Date(lastPull.at).toLocaleString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'never';
+  return `<div class="card"><div class="card-title">🔄 Sync check</div>
+    <div class="card-sub">Last pull from the Sheet: ${when}. If a row shows ⚠, this device is out of step — press “Pull latest now”.</div>
+    <div class="table-wrap"><table><thead><tr><th>Collection</th><th>In Sheet</th><th>On this device</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="syncFromSheet()">⟳ Pull latest now</button></div></div>`;
 }
 function themeCardHTML(){
   const t=getTheme();
@@ -1652,8 +1675,25 @@ function renderAssetDetail(id){
 
 function switchAssetTab(id, tab){ currentAssetTab = tab; renderAssetDetail(id); }
 
+const _addrTried = {};
+async function backfillAddress(a){
+  if (_addrTried[a.id] || a.address || !(a.lat && a.lng)) return;
+  _addrTried[a.id] = true;
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${a.lat}&lon=${a.lng}&format=json&addressdetails=1&accept-language=en`);
+    const d = await r.json(), ad = d.address || {};
+    if (!d.display_name) return;
+    a.address = d.display_name;
+    if (!a.county)    a.county    = ad.state || ad.county || '';
+    if (!a.subcounty) a.subcounty = ad.county || ad.city_district || ad.city || ad.town || '';
+    if (!a.locality)  a.locality  = ad.suburb || ad.neighbourhood || ad.village || ad.town || '';
+    await pushToSheet();
+    if (currentAssetId===a.id && currentAssetTab==='overview') renderAssetDetail(a.id);
+  } catch(e) { /* offline or lookup blocked — the address can still be typed in Edit asset */ }
+}
 function renderAssetTabBody(a){
   const body = document.getElementById('asset-tab-body');
+  if (currentAssetTab==='overview') backfillAddress(a);
   if (currentAssetTab==='overview'){
     const f = assetFinancials(a.id);
     const valueChange = Number(a.marketValue||0) - Number(a.acquisitionCost||0);
@@ -1835,7 +1875,7 @@ function openEditAssetModal(id){
   document.getElementById('af-subcounty').value=a.subcounty||'';
   document.getElementById('af-locality').value=a.locality||'';
   document.getElementById('af-parcel').value=a.parcelNumber||'';
-  document.getElementById('af-address').value=a.address||'';
+  document.getElementById('af-address').value=a.address||''; document.getElementById('af-address').dataset.auto='0';
   document.getElementById('af-size').value=a.sizeAcres||'';
   document.getElementById('af-plotwidth').value=a.plotWidth||'';
   document.getElementById('af-plotlength').value=a.plotLength||'';
@@ -1910,7 +1950,7 @@ async function reverseGeocode(lat, lng){
 
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
-    const res  = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const res  = await fetch(url + '&accept-language=en');   // plain GET: no custom header, so no CORS preflight (phones block those more often)
     const data = await res.json();
     const addr = data.address || {};
 
@@ -1939,6 +1979,9 @@ async function reverseGeocode(lat, lng){
     if (cField && !cField.value && county)    cField.value = county;
     if (sField && !sField.value && subcounty) sField.value = subcounty;
     if (lField && !lField.value && locality)  lField.value = locality;
+    // The address box was never filled, so assets showed "No address recorded". Fill it (and keep refreshing it as the pin moves, until the user types their own).
+    const aField = document.getElementById('af-address');
+    if (aField && fullAddr && (!aField.value || aField.dataset.auto==='1')) { aField.value = fullAddr; aField.dataset.auto = '1'; }
 
     // Open the details section so the user can see the auto-filled fields
     const details = document.querySelector('#asset-modal details');
@@ -2019,6 +2062,7 @@ function initMapPicker(lat, lng, zoom){
       reverseGeocode(p.lat.toFixed(6), p.lng.toFixed(6));
     });
     updateCoordsDisplay();
+    if (!document.getElementById('af-address').value) reverseGeocode(existingLat, existingLng);
   }
   mapInstance.on('click', e=>{
     document.getElementById('af-lat').value = e.latlng.lat.toFixed(6);
@@ -2183,16 +2227,18 @@ function unitPreview(){
   const p=unitPlanFrom(document.getElementById('af-unitcount').value,document.getElementById('af-unitrent').value,unitOv);
   el.innerHTML=planText(p)+(unitOv.length&&Number(document.getElementById('af-unitcount').value)<unitOv.length?'<br><span style="color:var(--amber)">Total units raised to match the units listed above.</span>':'');
 }
+function monthOfDate(v){ const t=String(v||''); if(/^\d{4}-\d{2}/.test(t)) return t.slice(0,7); const d=new Date(t); return isNaN(d)?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function localMonthNow(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
 function unitsCardHTML(a){
   if(!isUnitType(a.type)&&!hasUnits(a)) return '';
   if(!hasUnits(a)) return `<div class="card"><div class="card-title">🏠 Rental units</div><div style="font-size:12px;color:var(--muted)">Not set yet — use <b>Edit asset</b> to enter the number of units and the rent per unit.</div></div>`;
-  const p=unitPlan(a), mo=todayStr().slice(0,7), got=db.Income.filter(r=>r.assetId===a.id&&String(r.date||'').slice(0,7)===mo).reduce((t,r)=>t+Number(r.amount||0),0);
+  const p=unitPlan(a), mo=localMonthNow(), inc=db.Income.filter(r=>r.assetId===a.id), got=inc.filter(r=>monthOfDate(r.date)===mo).reduce((t,r)=>t+Number(r.amount||0),0), last=[...inc].sort((x,y)=>String(y.date).localeCompare(String(x.date)))[0];
   const rows=[]; if(p.std>0) rows.push(`<tr><td>${p.std} standard unit${p.std>1?'s':''} × ${fmtKES(p.rent)}</td><td style="text-align:right">${fmtKES(p.std*p.rent)}</td></tr>`);
   p.ov.forEach(x=>rows.push(`<tr><td>${escHtml(x.label||'Special unit')}</td><td style="text-align:right">${fmtKES(x.rent)}</td></tr>`));
   return `<div class="card"><div class="card-title">🏠 Rental units — ${p.count}</div><div class="table-wrap"><table><tbody>${rows.join('')}
     <tr style="border-top:2px solid var(--border2)"><td style="font-weight:700">Expected monthly rent</td><td style="text-align:right;font-weight:700">${fmtKES(p.total)}</td></tr>
     <tr><td>Expected per year</td><td style="text-align:right">${fmtKES(p.total*12)}</td></tr>
-    <tr><td>Collected this month</td><td class="${got>=p.total?'green':'amber'}" style="text-align:right;font-weight:600">${fmtKES(got)} <span style="font-size:11px;color:var(--muted)">(${Math.round(got/p.total*100)}%)</span></td></tr>
+    <tr><td>Collected this month</td><td class="${got>=p.total?'green':'amber'}" style="text-align:right;font-weight:600">${fmtKES(got)} <span style="font-size:11px;color:var(--muted)">(${Math.round(got/p.total*100)}%)</span></td></tr>${got===0&&last?`<tr><td>Last payment recorded</td><td style="text-align:right">${fmtKES(last.amount)} <span style="font-size:11px;color:var(--muted)">${last.date}</span></td></tr>`:''}
   </tbody></table></div></div>`;
 }
 function incomeUnitHelper(assetId){
@@ -2591,6 +2637,7 @@ function renderSettings(){
   <div class="page-header"><div class="page-title">Settings</div></div>
   <div style="max-width:560px">
     ${themeCardHTML()}
+    ${syncInfoHTML()}
     ${privacyCardHTML()}
     <div class="disclosure">
       ℹ️ <strong>About your data:</strong> everything you enter is saved to the single shared Google Sheet your family connects below. Every family member using this app with the same URL and token reads and writes the same data — think of it as one shared ledger, not separate copies. Every change is also recorded in the Audit_Log tab with who made it and when.
