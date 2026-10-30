@@ -862,9 +862,20 @@ tbody tr:hover .row-actions{opacity:1}
       <input type="number" id="yt-f-deposits" step="0.01" value="0">
     </div>
     <div class="fg">
+      <label>Date of the main deposit</label>
+      <input type="date" id="yt-f-depdate">
+      <div class="hint">Optional — lets the rate be measured on money actually at work. For several deposits use the biggest one.</div>
+    </div>
+    <div class="fg">
       <label>Withdrawals this month</label>
       <input type="number" id="yt-f-withdrawals" step="0.01" value="0">
     </div>
+    <div class="fg">
+      <label>Date of the main withdrawal</label>
+      <input type="date" id="yt-f-wddate">
+      <div class="hint">Optional — the day the money left the fund and stopped earning.</div>
+    </div>
+    <div class="fg" style="grid-column:1/-1"><div class="hint" id="yt-f-adbinfo" style="font-size:12.5px"></div></div>
     <div class="fg">
       <label>Transaction cost on deposits</label>
       <input type="number" id="yt-f-depcost" step="0.01" value="0">
@@ -1221,7 +1232,7 @@ function cashFlowParts(t){
   const snap=ytSnap(), yr=String(t.year);
   const land=t.totalIncomeYTD-t.totalExpensesYTD;
   let cash=0;
-  snap.entries.forEach(e=>{ if(String(e.month).slice(0,4)!==yr) return; const n=Number(e.netInterest||0), o=Number(e.opening||0); cash-=Number(e.depositCost||0)+Number(e.withdrawalCost||0); if(o>0&&n/o*12>0.5) return; cash+=n; });
+  snap.entries.forEach(e=>{ if(String(e.month).slice(0,4)!==yr) return; const n=Number(e.netInterest||0), o=entryCapital(e); cash-=Number(e.depositCost||0)+Number(e.withdrawalCost||0); if(o>0&&n/o*12>0.5) return; cash+=n; });
   return {land,cash,total:land+cash};
 }
 // Blended yield = annualised cash income ÷ average capital working to earn it.
@@ -1241,7 +1252,7 @@ function blendedYield(){
   snap.instruments.forEach(i=>{
     const es=snap.entries.filter(e=>e.instrumentId===i.id).sort((a,b)=>a.month.localeCompare(b.month)).slice(-12);
     let net=0, m=0; const opens=[];
-    es.forEach((e,ix)=>{ const n=Number(e.netInterest||0), o=Number(e.opening||0); if(o>0&&n/o*12>0.5) return;
+    es.forEach((e,ix)=>{ const n=Number(e.netInterest||0), o=entryCapital(e); if(o>0&&n/o*12>0.5) return;
       if(ix===es.length-1&&es.length>1&&n===0&&Number(e.grossInterest||0)===0&&Number(e.valueChange||0)===0&&o>0) return;   // latest month not credited yet — not a real 0%
       net+=n; m++; if(o>0) opens.push(o); });
     if(m&&opens.length){ cashAnnual+=net*12/m; cashBase+=opens.reduce((a,b)=>a+b,0)/opens.length; cashMonths=Math.max(cashMonths,m); }
@@ -1250,6 +1261,22 @@ function blendedYield(){
   return { pct:(landAnnual+cashAnnual)/base*100, landPct:land>0?landAnnual/land*100:null, cashPct:cashBase>0?cashAnnual/cashBase*100:null,
            wLand:land/base*100, wCash:cashBase/base*100, landMonths, cashMonths, landAnnual, cashAnnual, landBase:land, cashBase };
 }
+// Capital actually at work in a month. With the deposit / withdrawal dates entered it is the AVERAGE DAILY BALANCE
+// (each shilling counted for the days it was really in the fund); with no dates it is the opening balance, as before.
+// A deposit counts from its date, a withdrawal stops counting from its date. An amount with no date is left out.
+function entryCapital(e){
+  if(e._capital!=null) return Number(e._capital)||0;
+  const o=Number(e.opening||0), m=String(e.month||'');
+  if(!/^\d{4}-\d{2}$/.test(m)) return o;
+  const D=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();
+  const day=x=>{ const t=String(x||''); if(!/^\d{4}-\d{2}-\d{2}/.test(t)||t.slice(0,7)!==m) return null; return Math.min(Math.max(+t.slice(8,10),1),D); };
+  const dd=day(e.depositDate), wd=day(e.withdrawalDate), dep=Number(e.deposits||0), wdr=Number(e.withdrawals||0);
+  const useD=dd!==null&&dep>0, useW=wd!==null&&wdr>0;
+  if(!useD&&!useW) return o;
+  let sd=o*D; if(useD) sd+=dep*(D-dd+1); if(useW) sd-=wdr*(D-wd+1);
+  const adb=sd/D; return adb>0?adb:o;
+}
+function entryHasDates(e){ return e._capital!=null ? !!e._hasDates : Math.abs(entryCapital(e)-Number(e.opening||0))>0.005; }
 // ── MONTHLY inflation: one annualised headline rate per month (db.Inflation = {id, month:'YYYY-MM', rate}) ──
 function inflList(){ return (db.Inflation||[]).filter(r=>/^\d{4}-\d{2}$/.test(String(r.month))&&isFinite(parseFloat(r.rate))).sort((a,b)=>String(a.month).localeCompare(String(b.month))); }
 function inflationLatest(){ const l=inflList(); return l.length?{month:l[l.length-1].month,rate:Number(l[l.length-1].rate)}:null; }
@@ -1339,6 +1366,15 @@ function inflationCard(){
 // ── Overall monthly return (bars) vs inflation (red line), both annualised so they share one axis ──
 let mrPeriod=12;
 function setMrPeriod(n){ mrPeriod=n; const el=document.getElementById('mr-card'); if(el) el.outerHTML=monthlyReturnCard(); }
+// Zoom for the two month-by-month charts (pixels per month, like the Cash & Investments charts)
+const CZ={mr:62,lr:62};
+function czoom(k,dir){
+  CZ[k]=dir===0?62:Math.max(24,Math.min(130,CZ[k]+dir*10));
+  const el=document.getElementById(k+'-card'); if(!el) return;
+  el.outerHTML = k==='mr' ? monthlyReturnCard() : landRevenueCard(lrAsset);
+  const sc=document.querySelector('#'+k+'-card .cz-scroll'); if(sc) sc.scrollLeft=sc.scrollWidth;
+}
+const czBtns=k=>`<div class="header-actions" style="gap:6px"><button class="btn btn-sm" onclick="czoom('${k}',-1)">− Zoom out</button><button class="btn btn-sm" onclick="czoom('${k}',1)">+ Zoom in</button><button class="btn btn-sm btn-ghost" onclick="czoom('${k}',0)">Reset</button></div>`;
 function monthlyReturnSeries(){
   const snap=ytSnap(), landBase=db.Assets.reduce((s,a)=>s+Number(a.marketValue||0),0), isM=m=>/^\d{4}-\d{2}$/.test(m||'');
   const land={}, cash={}; let landFirst=null;
@@ -1347,7 +1383,7 @@ function monthlyReturnSeries(){
   db.Expenses.forEach(r=>addLand(r.date,-xAmt(r)));
   snap.instruments.forEach(i=>{
     const es=snap.entries.filter(e=>e.instrumentId===i.id).sort((a,b)=>a.month.localeCompare(b.month));
-    es.forEach((e,ix)=>{ const n=Number(e.netInterest||0), o=Number(e.opening||0);
+    es.forEach((e,ix)=>{ const n=Number(e.netInterest||0), o=entryCapital(e);
       if(o>0&&n/o*12>0.5) return;                                   // lump-sum entry, not a return
       if(ix===es.length-1&&es.length>1&&n===0&&Number(e.grossInterest||0)===0&&Number(e.valueChange||0)===0&&o>0) return; // not credited yet
       if(!isM(e.month)) return; (cash[e.month]=cash[e.month]||{net:0,base:0}); cash[e.month].net+=n; cash[e.month].base+=o; });
@@ -1371,9 +1407,9 @@ function monthlyReturnCard(){
   const chip=(on,n,l)=>`<button class="opt-chip${on?' active':''}" onclick="setMrPeriod(${n})">${l}</button>`;
   const all=monthlyReturnSeries(), rows=mrPeriod?all.slice(-mrPeriod):all;
   const head=`<div class="perf-head"><div><div class="card-title">📊 Monthly return vs inflation</div><div class="card-sub" style="margin-bottom:0">Overall return of all revenue-earning modules each month, annualised (monthly income × 12 ÷ capital) — compared with the annualised headline inflation you entered</div></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${chip(mrPeriod===6,6,'6M')}${chip(mrPeriod===12,12,'12M')}${chip(mrPeriod===0,0,'All')}</div></div>`;
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${chip(mrPeriod===6,6,'6M')}${chip(mrPeriod===12,12,'12M')}${chip(mrPeriod===0,0,'All')}${czBtns('mr')}</div></div>`;
   if(!rows.length) return `<div class="card" id="mr-card">${head}<div class="chart-empty" style="padding:18px;color:var(--muted);text-align:center;font-size:13px">Record some income, interest or project revenue to see the monthly return.</div></div>`;
-  const W=Math.max(640,rows.length*62+80), H=300, padL=52, padR=14, padT=24, padB=46;
+  const W=Math.max(560,rows.length*CZ.mr+80), H=300, padL=52, padR=14, padT=24, padB=46;
   const vals=[0]; rows.forEach(r=>{ vals.push(r.ret); if(r.infl!==null) vals.push(r.infl); });
   let max=Math.max(...vals), min=Math.min(...vals); if(max===min) max=min+1; const span=max-min; max+=span*.08; if(min<0) min-=span*.08;
   const y=v=>padT+(max-v)/(max-min)*(H-padT-padB), y0=y(0), gw=(W-padL-padR)/rows.length, bw=Math.min(34,gw*.55);
@@ -1391,7 +1427,7 @@ function monthlyReturnCard(){
   const withI=rows.filter(r=>r.infl!==null), avgR=withI.length?withI.reduce((s,r)=>s+r.ret,0)/withI.length:null, avgI=withI.length?withI.reduce((s,r)=>s+r.infl,0)/withI.length:null;
   const verdict=avgR===null?`<span style="color:var(--amber)">No inflation entered for these months yet — add it in the Monthly inflation card below to draw the red line.</span>`:`Across the ${withI.length} month${withI.length!==1?'s':''} with inflation entered, the average return was <b>${avgR.toFixed(2)}%</b> against <b>${avgI.toFixed(2)}%</b> inflation — a real return of <b class="${avgR-avgI>=0?'green':'red'}">${avgR-avgI>=0?'+':'−'}${Math.abs(avgR-avgI).toFixed(2)} %</b>.`;
   const legend=`<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:10px 0 2px"><span><span class="comp-dot" style="background:#4F8EF7;display:inline-block;margin-right:6px"></span>Overall return (annualised)</span><span><span style="display:inline-block;width:18px;height:3px;background:#F05252;vertical-align:middle;margin-right:6px;border-radius:2px"></span>Inflation (annualised headline)</span></div>`;
-  return `<div class="card" id="mr-card">${head}${legend}<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="min-width:${Math.min(W,rows.length*62+80)}px;margin-top:6px">${grid}<line x1="${padL}" x2="${W-padR}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" style="stroke:var(--border2)"/>${bars}${line}${dots}</svg></div>
+  return `<div class="card" id="mr-card">${head}${legend}<div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px;margin-top:6px">${grid}<line x1="${padL}" x2="${W-padR}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" style="stroke:var(--border2)"/>${bars}${line}${dots}</svg></div>
     <div class="card-sub" style="margin:8px 0 0">${verdict} Hover a bar or dot for the exact figures. Return = net land income, net interest and project operating income, each over the capital that earned it; price growth and project value gains are not counted.</div></div>`;
 }
 function blendedYieldKPI(){
@@ -1980,6 +2016,35 @@ function renderDashboard(){
 }
 
 // ── ASSETS LIST ────────────────────────────────────────────────
+// ── Land & Property: monthly income vs costs (bars) with the net line, across all assets ──
+let lrPeriod=12, lrAsset=null;
+function setLrPeriod(n){ lrPeriod=n; const el=document.getElementById('lr-card'); if(el) el.outerHTML=landRevenueCard(lrAsset); }
+function landRevenueCard(aid){
+  lrAsset=aid||null;
+  const by={}, isM=m=>/^\d{4}-\d{2}$/.test(m||'');
+  db.Income.filter(r=>!aid||r.assetId===aid).forEach(r=>{ const m=String(r.date||'').slice(0,7); if(!isM(m)) return; (by[m]=by[m]||{inc:0,exp:0}).inc+=Number(r.amount||0); });
+  db.Expenses.filter(r=>!aid||r.assetId===aid).forEach(r=>{ const m=String(r.date||'').slice(0,7); if(!isM(m)) return; (by[m]=by[m]||{inc:0,exp:0}).exp+=xAmt(r); });
+  const keys=Object.keys(by).sort();
+  const chip=(n,l)=>`<button class="opt-chip${lrPeriod===n?' active':''}" onclick="setLrPeriod(${n})">${l}</button>`;
+  const head=`<div class="perf-head"><div><div class="card-title">📈 Monthly revenue vs costs</div><div class="card-sub" style="margin-bottom:0">Rent and other income against expenses (including transaction costs) for this asset, with the net income line</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${chip(6,'6M')}${chip(12,'12M')}${chip(0,'All')}${czBtns('lr')}</div></div>`;
+  if(!keys.length) return `<div class="card" id="lr-card">${head}<div style="padding:18px;color:var(--muted);text-align:center;font-size:13px">Record some income or expenses for this asset (Income / Expenses tabs) to see this chart.</div></div>`;
+  let list=[]; for(let i=mIdx(keys[0]); i<=mIdx(keys[keys.length-1]) && list.length<120; i++){ const m=mFrom(i), q=by[m]||{inc:0,exp:0}; list.push({m,inc:q.inc,exp:q.exp,net:q.inc-q.exp}); }
+  if(lrPeriod) list=list.slice(-lrPeriod);
+  const W=Math.max(560,list.length*CZ.lr+80), H=290, padL=58, padR=14, padT=18, padB=44;
+  const vals=[0]; list.forEach(q=>vals.push(q.inc,q.exp,q.net)); let mx=Math.max(...vals), mn=Math.min(...vals); if(mx===mn) mx=mn+1;
+  const sp=mx-mn; mx+=sp*.08; if(mn<0) mn-=sp*.08;
+  const y=v=>padT+(mx-v)/(mx-mn)*(H-padT-padB), y0=y(0), gw=(W-padL-padR)/list.length, bw=Math.min(22,gw*.32), fm=v=>{const a=Math.abs(v),t=v<0?'−':''; return t+(a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?Math.round(a/1e3)+'k':Math.round(a));};
+  const grid=[0,1,2,3,4].map(i=>{ const v=mn+(mx-mn)*i/4; return `<line x1="${padL}" x2="${W-padR}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" style="stroke:var(--border)"/><text x="${padL-6}" y="${(y(v)+3).toFixed(1)}" text-anchor="end">${fm(v)}</text>`; }).join('');
+  const bars=list.map((q,i)=>{ const cx=padL+gw*i+gw/2, r=(v,dx,c,l)=>`<rect x="${(cx+dx).toFixed(1)}" y="${Math.min(y(v),y0).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(Math.abs(y(v)-y0),1).toFixed(1)}" rx="2" fill="${c}"><title>${mLabel(q.m)} ${l}: ${fmtKES(v)}</title></rect>`;
+    const mm=new Date(+q.m.slice(0,4),+q.m.slice(5,7)-1,1).toLocaleString('en-KE',{month:'short'});
+    return r(q.inc,-bw-1,'#34C97B','income')+r(q.exp,1,'#F5A623','expenses')+`<text x="${cx.toFixed(1)}" y="${H-26}" text-anchor="middle" style="fill:var(--text)">${mm}</text><text x="${cx.toFixed(1)}" y="${H-13}" text-anchor="middle" style="font-size:9.5px">${q.m.slice(0,4)}</text>`; }).join('');
+  const netD='M'+list.map((q,i)=>`${(padL+gw*i+gw/2).toFixed(1)},${y(q.net).toFixed(1)}`).join(' L');
+  const dots=list.map((q,i)=>`<circle cx="${(padL+gw*i+gw/2).toFixed(1)}" cy="${y(q.net).toFixed(1)}" r="3.5" fill="#4F8EF7"><title>${mLabel(q.m)} net: ${fmtKES(q.net)}</title></circle>`).join('');
+  const tI=list.reduce((s,q)=>s+q.inc,0), tE=list.reduce((s,q)=>s+q.exp,0);
+  const legend=`<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:10px 0 2px"><span><span class="comp-dot" style="background:#34C97B;display:inline-block;margin-right:6px"></span>Income</span><span><span class="comp-dot" style="background:#F5A623;display:inline-block;margin-right:6px"></span>Expenses</span><span><span style="display:inline-block;width:18px;height:3px;background:#4F8EF7;vertical-align:middle;margin-right:6px;border-radius:2px"></span>Net income</span></div>`;
+  return `<div class="card" id="lr-card">${head}${legend}<div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px;margin-top:6px">${grid}<line x1="${padL}" x2="${W-padR}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" style="stroke:var(--border2)"/>${bars}<path d="${netD}" fill="none" stroke="#4F8EF7" stroke-width="2.3" stroke-linejoin="round"/>${dots}</svg></div>
+    <div class="card-sub" style="margin:8px 0 0">Over the ${list.length} month${list.length!==1?'s':''} shown: income <b>${fmtKES(tI)}</b> · expenses <b>${fmtKES(tE)}</b> · net <b class="${tI-tE>=0?'green':'red'}">${tI-tE>=0?'+':'−'}${fmtKES(Math.abs(tI-tE)).replace('KES ','KES ')}</b>. Hover a bar or dot for exact figures.</div></div>`;
+}
 function renderAssets(){
   const main = document.getElementById('main');
   const assets = db.Assets;
@@ -2136,6 +2201,7 @@ function renderAssetTabBody(a){
         <tr><td>Liabilities against this asset</td><td style="font-weight:600">${fmtKES(f.totalLiabilityBalance)}</td></tr>
       </tbody></table></div>
     </div>
+    ${landRevenueCard(a.id)}
     ${unitsCardHTML(a)}
     ${a.notes ? `<div class="card"><div class="card-title">Notes</div><div style="font-size:13px;color:var(--text)">${a.notes}</div></div>` : ''}
     `;
@@ -3283,12 +3349,12 @@ function sortedEntries(){
   if (activeInst!=='all') return allSorted().filter(e=>e.instrumentId===activeInst);
   const raw=allSorted(), months=[...new Set(raw.map(e=>e.month))].sort(), carry={}, out=[];
   months.forEach(m=>{
-    const row={id:'agg-'+m,month:m,instrumentId:'all',opening:0,deposits:0,withdrawals:0,grossInterest:0,tax:0,netInterest:0,valueChange:0,depositCost:0,withdrawalCost:0,closing:0,notes:''};
+    const row={id:'agg-'+m,month:m,instrumentId:'all',opening:0,deposits:0,withdrawals:0,grossInterest:0,tax:0,netInterest:0,valueChange:0,depositCost:0,withdrawalCost:0,closing:0,notes:'',_capital:0,_hasDates:false};
     const here={}; raw.filter(e=>e.month===m).forEach(e=>{ here[e.instrumentId]=e; });
     const ids=new Set([...Object.keys(carry),...Object.keys(here)]);
     ids.forEach(id=>{ const e=here[id];
-      if(e){ ['opening','deposits','withdrawals','grossInterest','tax','netInterest','valueChange','depositCost','withdrawalCost','closing'].forEach(k=>row[k]+=Number(e[k]||0)); carry[id]=Number(e.closing||0); }
-      else { row.opening+=carry[id]; row.closing+=carry[id]; } });
+      if(e){ ['opening','deposits','withdrawals','grossInterest','tax','netInterest','valueChange','depositCost','withdrawalCost','closing'].forEach(k=>row[k]+=Number(e[k]||0)); carry[id]=Number(e.closing||0); row._capital+=entryCapital(e); if(entryHasDates(e)) row._hasDates=true; }
+      else { row.opening+=carry[id]; row.closing+=carry[id]; row._capital+=carry[id]; } });
     out.push(row);
   });
   return out;
@@ -3338,6 +3404,7 @@ function toNum(v){
   const n = parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));
   return isFinite(n)?n:0;
 }
+function normDay(v){ const t=String(v==null?'':v).trim(); const m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); return m? m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2) : ''; }
 function normalizeEntries(list){
   const byMonth = {};
   (list||[]).forEach(e=>{
@@ -3346,6 +3413,7 @@ function normalizeEntries(list){
     const inst = String(e.instrumentId||'').trim() || DEF_INST;
     byMonth[inst+'|'+month] = {
       id: String(e.id||'') || ('m_'+inst+'_'+month), month, instrumentId: inst, valueChange: toNum(e.valueChange), depositCost: toNum(e.depositCost), withdrawalCost: toNum(e.withdrawalCost),
+      depositDate: normDay(e.depositDate), withdrawalDate: normDay(e.withdrawalDate),
       opening: toNum(e.opening), deposits: toNum(e.deposits), withdrawals: toNum(e.withdrawals),
       grossInterest: toNum(e.grossInterest), tax: toNum(e.tax), netInterest: toNum(e.netInterest),
       closing: toNum(e.closing), notes: e.notes==null?'':String(e.notes)
@@ -3398,6 +3466,10 @@ async function syncFromSheet(opts) {
     }
     const changed = JSON.stringify(incoming) !== JSON.stringify(normalizeEntries(db.entries));
     const prevInst = db.instruments.slice(), backendHasMission = (json.instruments||[]).some(x=>x && Object.prototype.hasOwnProperty.call(x,'missionTarget'));
+    // An older Apps Script doesn't know the date / fee columns yet — keep what this browser already holds so nothing is lost.
+    if (!(json.entries||[]).some(x=>x && Object.prototype.hasOwnProperty.call(x,'depositDate'))) {
+      incoming.forEach(n=>{ const o=db.entries.find(x=>x.instrumentId===n.instrumentId&&x.month===n.month); if(o){ n.depositDate=o.depositDate||''; n.withdrawalDate=o.withdrawalDate||''; if(!(json.entries||[]).some(x=>x && Object.prototype.hasOwnProperty.call(x,'depositCost'))){ n.depositCost=o.depositCost||0; n.withdrawalCost=o.withdrawalCost||0; } } });
+    }
     db = { entries: incoming, instruments: normalizeInstruments(json.instruments, incoming) };
     if (!backendHasMission) db.instruments.forEach(i=>{ const o=prevInst.find(x=>x.id===i.id); if(o){ i.missionTitle=o.missionTitle||''; i.missionTarget=o.missionTarget||0; i.missionDesc=o.missionDesc||''; } });
     if (activeInst!=='all' && !db.instruments.some(i=>i.id===activeInst)) activeInst='all';
@@ -3486,7 +3558,7 @@ const ANOMALY_YIELD_THRESHOLD = 0.20;
 
 // Shared anomaly detection, used by computeKPIs() and both the interest
 // and yield charts so "anomalous" means the same thing everywhere.
-function entryYield(e){ return Number(e.opening)>0 ? (Number(e.netInterest||0)/Number(e.opening))*12 : null; }
+function entryYield(e){ const c=entryCapital(e); return c>0 ? (Number(e.netInterest||0)/c)*12 : null; }
 function anomalyFlags(es){
   return es.map(e=>{ const y = entryYield(e); return y!==null && Math.abs(y) > ANOMALY_YIELD_THRESHOLD; });
 }
@@ -3549,9 +3621,9 @@ function recentYield(n){
   const win = es.filter((e,i)=>!flags[i]).slice(-n);
   if (!win.length) return null;
   const sum = (arr,f)=>arr.reduce((s,e)=>s+Number(f(e)||0),0);
-  const open = sum(win,e=>e.opening);
+  const open = sum(win,e=>entryCapital(e));
   const gWin = win.filter(e=>Number(e.grossInterest)>0);
-  const gOpen = sum(gWin,e=>e.opening);
+  const gOpen = sum(gWin,e=>entryCapital(e));
   return {
     months: win.length, from: win[0].month, to: win[win.length-1].month,
     net: sum(win,e=>e.netInterest)/open*12,
@@ -3641,7 +3713,7 @@ const median = a => { const b=[...a].sort((x,y)=>x-y), m=b.length>>1; return b.l
 function latestInfo(k){
   const es = sortedEntries(), flags = anomalyFlags(es), i = es.length-1, e = es[i];
   const net = entryYield(e);
-  const gross = Number(e.opening)>0 && Number(e.grossInterest)>0 ? Number(e.grossInterest)/Number(e.opening)*12 : null;
+  const gross = entryCapital(e)>0 && Number(e.grossInterest)>0 ? Number(e.grossInterest)/entryCapital(e)*12 : null;
   const prev = es.slice(0,i).map((x,j)=>flags[j]?null:entryYield(x)).filter(v=>v!==null).slice(-3);
   const prevAvg = prev.length ? prev.reduce((a,b)=>a+b,0)/prev.length : null;
   const diff = prevAvg!==null && net!==null ? net-prevAvg : null;
@@ -3669,7 +3741,7 @@ function renderDashboard(){
   else badge = `<span class="badge b-green">🟢 ${L.net>k.avgYield+0.005?'Above':'In line with'} your ${fmtPct(k.avgYield)} lifetime average</span>`;
   const grossPts = L.gross!==null && L.net!==null ? L.gross-L.net : null;
   const mGross = Number(e.grossInterest) || (Number(e.netInterest)+Number(e.tax));
-  const mp = amt => Number(e.opening)>0 ? (amt/Number(e.opening)*12*100).toFixed(2)+'%' : '—';
+  const mp = amt => entryCapital(e)>0 ? (amt/entryCapital(e)*12*100).toFixed(2)+'%' : '—';
   const mTaxLbl = Math.round((mGross>0 ? Number(e.tax)/mGross : 0.15)*100)+'%';
 
   main.innerHTML = `
@@ -3697,7 +3769,7 @@ function renderDashboard(){
       <div class="row2 total"><span style="color:var(--text)">Interest earned after tax</span><span class="green"><b>${fmtKES(e.netInterest)}</b> <span class="pct">${mp(Number(e.netInterest))}</span></span></div>`}
       <div id="yt-real-rows">${realRows()}</div>
       ${badge}
-      <div class="card-sub" style="margin:10px 0 0">${L.pending?'Rates will appear once the month’s interest is added.':`Percentages are yearly rates on your opening balance of ${fmtKES(e.opening)}.`}</div>
+      <div class="card-sub" style="margin:10px 0 0">${L.pending?'Rates will appear once the month’s interest is added.':(entryHasDates(e)?`Percentages are yearly rates on your <b>average daily balance of ${fmtKES(entryCapital(e))}</b> — the money actually at work, allowing for the dates you deposited and withdrew (opening balance was ${fmtKES(e.opening)}).`:`Percentages are yearly rates on your opening balance of ${fmtKES(e.opening)}. Add the deposit / withdrawal dates to this month’s entry for a fairer rate.`)}</div>
     </div>
     <div class="card">
       <div class="card-title">Lifetime so far</div>
@@ -3720,7 +3792,7 @@ function renderDashboard(){
   </div>
   <div class="charts-grid">
     <div class="card"><div class="card-title">Total wealth growth</div><div class="card-sub">Balance (green) vs net principal — deposited minus withdrawn (dotted) · the shaded gap is interest earned${k.totalWithdrawals>0?' · ▼ pins mark money withdrawn, so a drop there is an outflow, not a loss':''}</div>${chartWealth()}</div>
-    <div class="card"><div class="card-title">Monthly income &amp; earning rate</div><div class="card-sub">Bars = interest earned (left axis) · line = net annualised rate (right axis)</div>${chartIncome()}</div>
+    <div class="card"><div class="card-title">Monthly income &amp; earning rate</div><div class="card-sub">Bars = interest earned (left axis) · amber line = net annualised rate · <span style="color:#F05252">red line = annualised inflation</span> (right axis). Where amber sits above red you are beating inflation that month.</div>${chartIncome()}</div>
   </div>
 
   <div class="card">
@@ -3814,24 +3886,27 @@ function chartIncome(){
   const raw = es.map((e,i)=> pend[i] ? null : entryYield(e));
   const med = median(raw.filter((v,i)=>v!==null && !flags[i]));
   const rate = raw.map((v,i)=> pend[i] ? null : (v===null||flags[i] ? med : v));   // anomalies smoothed; pending month has no rate
-  const inc = es.map((e,i)=> flags[i] ? Number(e.opening)*med/12 : Number(e.netInterest||0));
-  const imax = Math.max(...inc,1), rmax = Math.max(...rate.filter(v=>v!==null),0.001)*1.15;
+  const inc = es.map((e,i)=> flags[i] ? entryCapital(e)*med/12 : Number(e.netInterest||0));
+  const infl = es.map(e=>{ const v=inflationFor(e.month); return v===null?null:v/100; });   // annualised headline inflation for that month
+  const imax = Math.max(...inc,1), rmax = Math.max(...rate.filter(v=>v!==null),...infl.filter(v=>v!==null),0.001)*1.15;
   const slot = (w-padL-padR)/es.length, bw = Math.max(slot-4,2);
   const cx = i=>padL+i*slot+slot/2;
   const yI = v=>h-padB-(v/imax)*(h-padB-padT), yR = v=>h-padB-(v/rmax)*(h-padB-padT);
   const bars = es.map((e,i)=>`<rect x="${(cx(i)-bw/2).toFixed(1)}" y="${yI(inc[i]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(h-padB-yI(inc[i])).toFixed(1)}" rx="1" fill="#4F8EF7" fill-opacity="${flags[i]?0.4:0.85}"${flags[i]?' stroke="#F5A623" stroke-dasharray="2,2"':''}><title>${fmtMonth(e.month)}: ${fmtKES(inc[i])}${flags[i]?` (rate adjusted — entered as ${fmtKES(e.netInterest)})`:''}</title></rect>`).join('');
   const line = 'M'+rate.map((v,i)=>v===null?null:`${cx(i).toFixed(1)},${yR(v).toFixed(1)}`).filter(Boolean).join(' L');
+  const inflPath = (()=>{ let d='',pen=false; infl.forEach((v,i)=>{ if(v===null){ pen=false; return; } d+=(pen?'L':'M')+cx(i).toFixed(1)+','+yR(v).toFixed(1)+' '; pen=true; }); return d; })();
+  const inflDots = es.map((e,i)=> infl[i]===null ? '' : `<circle cx="${cx(i).toFixed(1)}" cy="${yR(infl[i]).toFixed(1)}" r="2.5" fill="#F05252"><title>${fmtMonth(e.month)}: inflation ${(infl[i]*100).toFixed(2)}% (annualised)</title></circle>`).join('');
   const pendBand = es.map((e,i)=> !pend[i] ? '' : `<rect x="${(cx(i)-slot/2+1).toFixed(1)}" y="${padT}" width="${(slot-2).toFixed(1)}" height="${h-padB-padT}" rx="3" style="fill:var(--faint);stroke:var(--border2)" fill-opacity="0.5" stroke-dasharray="3,3"><title>${fmtMonth(e.month)}: ${pendingLabel(e).replace('⏳ ','')} — interest not credited yet</title></rect><text x="${cx(i).toFixed(1)}" y="${(h-padB-8).toFixed(1)}" text-anchor="middle"><title>${fmtMonth(e.month)}: interest not credited yet</title>⏳</text>`).join('');
-  const dots = es.map((e,i)=> pend[i] ? '' : `<circle cx="${cx(i).toFixed(1)}" cy="${yR(rate[i]).toFixed(1)}" r="2.5" fill="#F5A623"><title>${fmtMonth(e.month)}: ${(rate[i]*100).toFixed(2)}%${flags[i]?' (rate adjusted)':''}</title></circle>`).join('');
+  const dots = es.map((e,i)=> pend[i] ? '' : `<circle cx="${cx(i).toFixed(1)}" cy="${yR(rate[i]).toFixed(1)}" r="2.5" fill="#F5A623"><title>${fmtMonth(e.month)}: ${(rate[i]*100).toFixed(2)}%${flags[i]?' (rate adjusted)':''}${infl[i]!==null?' · inflation '+(infl[i]*100).toFixed(2)+'% · real '+(rate[i]>=infl[i]?'+':'−')+Math.abs((rate[i]-infl[i])*100).toFixed(2)+' %':''}</title></circle>`).join('');
   const lAxis = [0,1,2,3].map(i=>{const v=imax*i/3; return `<line x1="${padL}" x2="${w-padR}" y1="${yI(v).toFixed(1)}" y2="${yI(v).toFixed(1)}" style="stroke:var(--border)"/><text x="${padL-6}" y="${(yI(v)+3).toFixed(1)}" text-anchor="end">${fmtCompact(v)}</text>`;}).join('');
   const rAxis = [0,1,2,3].map(i=>{const v=rmax*i/3; return `<text x="${w-padR+6}" y="${(yR(v)+3).toFixed(1)}" fill="#F5A623">${(v*100).toFixed(1)}%</text>`;}).join('');
   const n = flags.filter(Boolean).length;
   const pill = n ? `<span class="pill" title="${es.filter((e,i)=>flags[i]).map(e=>fmtMonth(e.month)+': entered as '+fmtKES(e.netInterest)).join(' · ')}">ℹ️ Rate adjusted because ${n===1?'this month is':n+' months are'} incomplete</span>` : '';
   const pi = pend.indexOf(true);
   const pendPill = pi>-1 ? `<span class="pill pill-muted" style="margin-left:6px" title="The rate line resumes once interest is credited">⏳ ${fmtMonth(es[pi].month)} in progress — rate shown after interest is credited</span>` : '';
-  return pill + pendPill + chartContainer(`${lAxis}${pendBand}${bars}<path d="${line}" fill="none" stroke="#F5A623" stroke-width="2"/>${dots}${rAxis}
+  return pill + pendPill + chartContainer(`${lAxis}${pendBand}${bars}<path d="${line}" fill="none" stroke="#F5A623" stroke-width="2"/>${dots}${inflPath?`<path d="${inflPath}" fill="none" stroke="#F05252" stroke-width="2"/>`:''}${inflDots}${rAxis}
     ${monthLabels(es,cx,'middle').replace(/__H__/g,h-4)}
-    <text x="${padL+4}" y="14" fill="#4F8EF7">▮ Interest earned</text><text x="${padL+110}" y="14" fill="#F5A623">● Net rate</text>`, w, h);
+    <text x="${padL+4}" y="14" fill="#4F8EF7">▮ Interest earned</text><text x="${padL+110}" y="14" fill="#F5A623">● Net rate</text>${inflPath?`<text x="${padL+190}" y="14" fill="#F05252">━ Inflation</text>`:''}`, w, h);
 }
 
 // ── Self-contained SVG charts (no external library) ────────────
@@ -3922,6 +3997,7 @@ function openAddModal(){
   fillInstSelect(activeInst!=='all'?activeInst:db.instruments[0].id); $('f-valchg').value=0; $('f-depcost').value=0; $('f-wdcost').value=0;
   ['opening','deposits','withdrawals','gross','tax','net','closing','notes'].forEach(f=>$('f-'+f).value= (f==='deposits'||f==='withdrawals'||f==='gross') ? 0 : '');
   $('f-opening').value = lastClosing($('f-instrument').value);
+  $('f-depdate').value=''; $('f-wddate').value='';
   const now=new Date();
   $('f-month').value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   clearErrors();
@@ -3936,7 +4012,7 @@ function openEditModal(id){
   $('f-month').value=e.month;
   $('f-opening').value=e.opening;
   $('f-deposits').value=e.deposits;
-  $('f-withdrawals').value=e.withdrawals; $('f-depcost').value=e.depositCost||0; $('f-wdcost').value=e.withdrawalCost||0;
+  $('f-withdrawals').value=e.withdrawals; $('f-depdate').value=e.depositDate||''; $('f-wddate').value=e.withdrawalDate||''; $('f-depcost').value=e.depositCost||0; $('f-wdcost').value=e.withdrawalCost||0;
   $('f-gross').value=e.grossInterest;
   $('f-tax').value=e.tax;
   $('f-net').value=e.netInterest;
@@ -3961,9 +4037,16 @@ function recalcPreview(){
   $('f-net').value = net;
   const vc = Number($('f-valchg').value||0);
   $('f-closing').value = Math.round((opening+deposits-withdrawals+net+vc)*100)/100;
+  // keep the date pickers inside the chosen month, and show the capital the rate will be measured on
+  const mo=$('f-month').value;
+  if(/^\d{4}-\d{2}$/.test(mo)){ const last=new Date(+mo.slice(0,4),+mo.slice(5,7),0).getDate(); ['f-depdate','f-wddate'].forEach(i=>{ $(i).min=mo+'-01'; $(i).max=mo+'-'+String(last).padStart(2,'0'); }); }
+  const tmp={month:mo,opening,deposits,withdrawals,depositDate:$('f-depdate').value,withdrawalDate:$('f-wddate').value}, cap=entryCapital(tmp), info=$('f-adbinfo');
+  if(info){ if(Math.abs(cap-opening)>0.005&&cap>0){ const y=net/cap*12*100, y0=opening>0?net/opening*12*100:null;
+      info.innerHTML=`💡 Average daily balance (money actually at work): <b>${fmtKES(cap)}</b> → net yield <b>${y.toFixed(2)}%</b> a year`+(y0!==null?` <span style="color:var(--muted)">(on the opening balance it would show ${y0.toFixed(2)}%)</span>`:''); }
+    else info.innerHTML=(deposits>0||withdrawals>0)?'Add the date of the deposit / withdrawal to measure the rate on the average daily balance instead of the opening balance.':''; }
 }
 document.addEventListener('input', e=>{
-  if (['f-opening','f-deposits','f-withdrawals','f-tax'].includes(e.target.id)) recalcPreview();
+  if (['f-opening','f-deposits','f-withdrawals','f-tax','f-month','f-depdate','f-wddate','f-gross'].map(x=>'yt-'+x).includes(e.target.id)||['f-opening','f-deposits','f-withdrawals','f-tax'].includes(e.target.id)) recalcPreview();
 });
 
 // A month's closing balance is the next month's opening balance. When one month is edited, added or deleted,
@@ -3999,6 +4082,7 @@ function saveEntry(){
     opening: Number(opening),
     deposits: Number($('f-deposits').value||0),
     withdrawals: Number($('f-withdrawals').value||0),
+    depositDate: Number($('f-deposits').value||0)>0 ? ($('f-depdate').value||'') : '', withdrawalDate: Number($('f-withdrawals').value||0)>0 ? ($('f-wddate').value||'') : '',
     grossInterest: Number($('f-gross').value||0),
     tax: Number($('f-tax').value||0),
     netInterest: Number($('f-net').value||0),
@@ -4059,8 +4143,8 @@ function renderExport(){
   renderSidebarFooter();
 }
 function exportCSV(){
-  const h=['Instrument','Type','Month','Opening','Deposits','Withdrawals','Deposit cost','Withdrawal cost','Gross Interest','Tax','Net Interest','Closing','Notes'];
-  const rows=allSorted().map(e=>[instName(e.instrumentId),instCat(e.instrumentId),e.month,e.opening,e.deposits,e.withdrawals,e.depositCost||0,e.withdrawalCost||0,e.grossInterest,e.tax,e.netInterest,e.closing,e.notes||'']);
+  const h=['Instrument','Type','Month','Opening','Deposits','Withdrawals','Deposit cost','Withdrawal cost','Deposit date','Withdrawal date','Average daily balance','Gross Interest','Tax','Net Interest','Closing','Notes'];
+  const rows=allSorted().map(e=>[instName(e.instrumentId),instCat(e.instrumentId),e.month,e.opening,e.deposits,e.withdrawals,e.depositCost||0,e.withdrawalCost||0,e.depositDate||'',e.withdrawalDate||'',Math.round(entryCapital(e)),e.grossInterest,e.tax,e.netInterest,e.closing,e.notes||'']);
   const csv=[h,...rows].map(r=>r.map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
@@ -4429,6 +4513,98 @@ function liveBody(p){
    <div class="pj-row"><span class="pj-m">Remaining on the full price</span><b style="font-variant-numeric:tabular-nums">${k4(pc.remainTotal)}</b></div>
    <div class="pj-al pj-wn" style="margin:10px 0 0">${planTxt}</div>`;
 }
+
+/* ───────── overview charts: target vs paid · budget vs spent vs built · revenue vs costs ───────── */
+const mi=m=>+m.slice(0,4)*12+ +m.slice(5,7)-1, mf=i=>Math.floor(i/12)+'-'+String(i%12+1).padStart(2,'0');
+const mlab=m=>new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleString('en-KE',{month:'short',year:'2-digit'});
+const hasInfl=()=>{try{return typeof inflList==='function'&&inflList().length>0;}catch(e){return false;}};
+const inflNow=()=>{try{return getInflation();}catch(e){return 0;}};
+const PZ={rev:58,tgt:26};
+const zoomBtns=k=>`<span style="display:inline-flex;gap:6px;flex-wrap:wrap"><button class="pj-b pj-sm" onclick="PJ.zoom('${k}',-1)">− Zoom out</button><button class="pj-b pj-sm" onclick="PJ.zoom('${k}',1)">+ Zoom in</button><button class="pj-b pj-sm" onclick="PJ.zoom('${k}',0)">Reset</button></span>`;
+function zoom(k,dir){
+  const def=k==='rev'?58:26,step=k==='rev'?10:6,lo=k==='rev'?24:10,hi=k==='rev'?130:90;
+  PZ[k]=dir===0?def:clamp(PZ[k]+dir*step,lo,hi);
+  const p=P(),el=$('pj-card-'+k);if(!p||!el)return;
+  const m=metrics(p),t=document.createElement('div');t.innerHTML=(k==='rev'?revenueCard(p,m):targetCard(p,m)).trim();el.replaceWith(t.firstChild);
+  const sc=document.querySelector('#pj-card-'+k+' .cz-scroll');if(sc)sc.scrollLeft=sc.scrollWidth;
+}
+const leg=(c,l,dash)=>`<span style="display:inline-flex;align-items:center;gap:6px"><span style="display:inline-block;width:18px;height:0;border-top:3px ${dash?'dashed':'solid'} ${c}"></span>${l}</span>`;
+function chartAxes(W,H,padL,padR,padT,padB,max,fmt){
+  return [0,1,2,3].map(i=>{const v=max*i/3,y=padT+(1-i/3)*(H-padT-padB);return `<line x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" style="stroke:var(--pj-bd)"/><text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end">${fmt(v)}</text>`;}).join('');
+}
+function targetCard(p,m){
+  const pc=m.pc;if(!pc)return '';
+  const led=rows('Ledger',p.id).filter(r=>COUNTED.includes(r.status)&&r.date);
+  const startM=String(p.priceStart||p.startDate||today()).slice(0,7),nowM=today().slice(0,7),nI=mi(nowM);
+  let first=startM;led.forEach(r=>{const k=String(r.date).slice(0,7);if(k<first)first=k;});
+  const D=num(p.monthlyDeposit),ms=monthsToSecure(p,m.paid),a0=mi(first);
+  let endI=ms&&ms.months?nI+ms.months+1:nI+6;endI=Math.min(Math.max(endI,nI+1),a0+119);
+  const inflOn=hasInfl(),ir=inflNow()/100/12,base0=pc.req>0?pc.P0*pc.req/100:pc.P0,sI=mi(startM);
+  const pts=[];
+  for(let i=a0;i<=endI;i++){
+    const mk=mf(i),at=i===nI?new Date():new Date(Math.floor(i/12),i%12+1,0,23,59);
+    const target=purchaseCalc(p,0,at).target;
+    const paid=i<=nI?led.filter(r=>String(r.date).slice(0,7)<=mk).reduce((s,r)=>s+paidOf(r),0):null;
+    const proj=(i>=nI&&D>0)?m.paid+D*(i-nI):null;
+    const inf=(inflOn&&i>=sI)?base0*Math.pow(1+ir,i-sI):null;
+    pts.push({i,mk,target,paid:i===nI?m.paid:paid,proj,inf});
+  }
+  const n=pts.length,W=Math.max(680,n*PZ.tgt+80),H=270,padL=62,padR=18,padT=14,padB=30;
+  const vals=[];pts.forEach(q=>{vals.push(q.target);if(q.paid!=null)vals.push(q.paid);if(q.proj!=null)vals.push(Math.min(q.proj,q.target*1.15));if(q.inf!=null)vals.push(q.inf);});
+  const max=Math.max(...vals,1)*1.08,x=k=>padL+(n>1?k/(n-1):0)*(W-padL-padR),y=v=>padT+(1-v/max)*(H-padT-padB);
+  const path=(f,stop)=>{let d='',pen=false;pts.forEach((q,k)=>{const v=f(q);if(v==null||(stop&&stop(q,k))){pen=false;return;}d+=(pen?'L':'M')+x(k).toFixed(1)+' '+y(v).toFixed(1)+' ';pen=true;});return d;};
+  let crossK=-1;if(D>0)pts.forEach((q,k)=>{if(crossK<0&&q.i>=nI&&q.proj!=null&&q.proj>=q.target)crossK=k;});
+  const projD=path(q=>q.proj,(q,k)=>crossK>-1&&k>crossK);
+  const nowK=pts.findIndex(q=>q.i===nI),step=Math.max(1,Math.ceil(48/((W-padL-padR)/Math.max(n-1,1))));
+  const xl=pts.map((q,k)=>k%step===0?`<text x="${x(k).toFixed(1)}" y="${H-10}" text-anchor="middle">${mlab(q.mk)}</text>`:'').join('');
+  const cross=crossK>-1?`<circle cx="${x(crossK).toFixed(1)}" cy="${y(pts[crossK].target).toFixed(1)}" r="5" fill="#fff" stroke="var(--pj-gr)" stroke-width="2.5"><title>Lines meet around ${mlab(pts[crossK].mk)} — the unit is secured</title></circle><text x="${Math.min(x(crossK),W-70).toFixed(1)}" y="${(y(pts[crossK].target)-10).toFixed(1)}" text-anchor="middle" style="fill:var(--text);font-weight:600">Secure ≈ ${mlab(pts[crossK].mk)}</text>`:'';
+  const prog=pc.target>0?clamp(m.paid/pc.target*100,0,100):0,secured=pc.remainSecure<=0;
+  const foot=secured?`✅ Paid is already above today’s target — the deposit is secured, and you are ${kes(pc.surplus)} ahead.`:ms&&ms.months?`At ${kes(D)} a month the lines meet in about ${ms.months} month${ms.months!==1?'s':''} (${ms.at.toLocaleDateString('en-KE',{month:'long',year:'numeric'})}) — that is when you secure the unit.`:D>0?`At ${kes(D)} a month the deposit never catches the target within 50 years — the price is growing faster than you are paying.`:'Set a planned monthly deposit on the project to see when the lines will meet.';
+  const infTxt=inflOn?` The thin red line is what the target would be if the price had only kept pace with inflation (${inflNow()}% a year) — the gap above it is the price growth beyond inflation.`:'';
+  return `<div class="pj-c" id="pj-card-tgt"><div class="pj-ct">🎯 Target vs paid</div><div class="pj-cs">The target is a moving line — ${pc.req>0?pct(pc.req)+' of a price growing '+pct(p.priceGrowth)+' a year':'the price growing '+pct(p.priceGrowth)+' a year'}. Where your payments cross it, the unit is secured.</div>
+   <div style="display:flex;justify-content:space-between;font-size:12.5px;margin:8px 0 3px"><span>Paid ${kes(m.paid)} of ${kes(pc.target)} target</span><b>${pct(prog)} · ${secured?'secured':kes(pc.remainSecure)+' to go'}</b></div>
+   <div class="pj-bar ${secured?'g':''}"><div style="width:${prog}%"></div></div>
+   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 2px"><div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">${leg('#F5A623','Target (rising)')}${leg('#34C97B','Paid so far')}${D>0?leg('#4F8EF7','Projected deposits',1):''}${inflOn?leg('#F05252','Target if only inflation'):''}</div>${zoomBtns('tgt')}</div>
+   <div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px">${chartAxes(W,H,padL,padR,padT,padB,max,cmp)}
+    ${nowK>-1?`<line x1="${x(nowK).toFixed(1)}" x2="${x(nowK).toFixed(1)}" y1="${padT}" y2="${H-padB}" stroke="#8A94A6" stroke-dasharray="3,3"/><text x="${x(nowK).toFixed(1)}" y="${padT+9}" text-anchor="${nowK>n*0.8?'end':'start'}" dx="${nowK>n*0.8?-4:4}">Today</text>`:''}
+    <path d="${path(q=>q.target)}" fill="none" stroke="#F5A623" stroke-width="2.5"/>
+    ${inflOn?`<path d="${path(q=>q.inf)}" fill="none" stroke="#F05252" stroke-width="1.8"/>`:''}
+    ${projD?`<path d="${projD}" fill="none" stroke="#4F8EF7" stroke-width="2" stroke-dasharray="6,4"/>`:''}
+    <path d="${path(q=>q.paid)}" fill="none" stroke="#34C97B" stroke-width="2.5"/>${cross}${xl}</svg></div>
+   <div class="pj-cs" style="margin:8px 0 0">${foot}${infTxt}</div></div>`;
+}
+function buildCard(p,m,v){
+  const b=m.budget||0,built=b*m.completion/100,bars=[['Budget',b,'#8A94A6'],['Spent',m.incurred,m.spentPct>m.completion+10?'#F05252':m.spentPct>m.completion+3?'#F5A623':'#4F8EF7'],['Value built',built,'#34C97B'],['Forecast at completion',m.forecast,m.forecast>b*1.03&&b>0?'#F05252':'#8B7CF6']];
+  const W=520,H=210,padL=58,padR=10,padT=22,padB=34,max=Math.max(...bars.map(x=>x[1]),1)*1.1,gw=(W-padL-padR)/bars.length,bw=Math.min(54,gw*.55),y=val=>padT+(1-val/max)*(H-padT-padB);
+  const g=bars.map((x,i)=>{const cx=padL+gw*i+gw/2,top=y(x[1]);return `<rect x="${(cx-bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(H-padB-top,1).toFixed(1)}" rx="3" fill="${x[2]}"><title>${x[0]}: ${kes(x[1])}</title></rect><text x="${cx.toFixed(1)}" y="${(top-5).toFixed(1)}" text-anchor="middle" style="fill:var(--text);font-size:10.5px">${cmp(x[1])}</text><text x="${cx.toFixed(1)}" y="${H-14}" text-anchor="middle">${x[0]}</text>`;}).join('');
+  return `<div class="pj-c"><div class="pj-ct">💰 Budget vs spent vs built</div><div class="pj-cs">Spent should never run far ahead of what has been built (${pct(m.completion)} complete, ${pct(m.spentPct)} of budget used)</div>
+   <svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="max-width:560px">${chartAxes(W,H,padL,padR,padT,padB,max,cmp)}${g}</svg>
+   <div class="pj-al ${v[0]}" style="margin:10px 0 0">${v[1]}</div></div>`;
+}
+function revenueCard(p,m){
+  const rv=rows('Revenue',p.id).filter(r=>/^\d{4}-\d{2}/.test(r.date||'')),by={};
+  rv.forEach(r=>{const k=String(r.date).slice(0,7);by[k]=by[k]||{rev:0,cost:0};if(r.kind==='Revenue')by[k].rev+=num(r.amount);else by[k].cost+=num(r.amount);});
+  const ks=Object.keys(by).sort();if(!ks.length)return '';
+  const list=[];for(let i=mi(ks[0]);i<=mi(ks[ks.length-1])&&list.length<60;i++){const k=mf(i),q=by[k]||{rev:0,cost:0};list.push({k,rev:q.rev,cost:q.cost,net:q.rev-q.cost});}
+  const W=Math.max(520,list.length*PZ.rev+80),H=250,padL=58,padR=12,padT=18,padB=34;
+  const all=[0];list.forEach(q=>all.push(q.rev,q.cost,q.net));let mx=Math.max(...all),mn=Math.min(...all);if(mx===mn)mx=mn+1;
+  const y=v=>padT+(mx-v)/(mx-mn)*(H-padT-padB),y0=y(0),gw=(W-padL-padR)/list.length,bw=Math.min(20,gw*.32);
+  const grid=[0,1,2,3].map(i=>{const v=mn+(mx-mn)*i/3;return `<line x1="${padL}" x2="${W-padR}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" style="stroke:var(--pj-bd)"/><text x="${padL-6}" y="${(y(v)+3).toFixed(1)}" text-anchor="end">${cmp(v)}</text>`;}).join('');
+  const bars=list.map((q,i)=>{const cx=padL+gw*i+gw/2,r=(v,dx,c,l)=>`<rect x="${(cx+dx).toFixed(1)}" y="${Math.min(y(v),y0).toFixed(1)}" width="${bw}" height="${Math.max(Math.abs(y(v)-y0),1).toFixed(1)}" rx="2" fill="${c}"><title>${mlab(q.k)} ${l}: ${kes(v)}</title></rect>`;return r(q.rev,-bw-1,'#34C97B','revenue')+r(q.cost,1,'#F5A623','costs')+`<text x="${cx.toFixed(1)}" y="${H-14}" text-anchor="middle">${mlab(q.k)}</text>`;}).join('');
+  const netD='M'+list.map((q,i)=>`${(padL+gw*i+gw/2).toFixed(1)},${y(q.net).toFixed(1)}`).join(' L');
+  const dots=list.map((q,i)=>`<circle cx="${(padL+gw*i+gw/2).toFixed(1)}" cy="${y(q.net).toFixed(1)}" r="3" fill="#4F8EF7"><title>${mlab(q.k)} net: ${kes(q.net)}</title></circle>`).join('');
+  const ro=m.incurred>0?m.roi:null,ir=inflNow(),inf=hasInfl()&&ro!==null?` Annualised return on project cost is <b>${pct(ro)}</b> against <b>${ir}%</b> inflation — a real return of <b class="${ro-ir>=0?'pj-g':'pj-r'}">${ro-ir>=0?'+':'−'}${Math.abs(ro-ir).toFixed(1)} %</b>.`:'';
+  return `<div class="pj-c" id="pj-card-rev"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><div class="pj-ct">📈 Monthly revenue vs costs</div><div class="pj-cs">Operating revenue and costs each month, with the net income line</div></div>${zoomBtns('rev')}</div>
+   <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin:8px 0 2px">${leg('#34C97B','Revenue')}${leg('#F5A623','Operating costs')}${leg('#4F8EF7','Net income')}</div>
+   <div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px">${grid}<line x1="${padL}" x2="${W-padR}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" style="stroke:var(--border2)"/>${bars}<path d="${netD}" fill="none" stroke="#4F8EF7" stroke-width="2.2"/>${dots}</svg></div>
+   <div class="pj-cs" style="margin:8px 0 0">Net so far ${kes(m.noi)}.${inf}</div></div>`;
+}
+function moneyBar(m){
+  const col=['#4F8EF7','#34C97B','#F5A623','#8B7CF6','#E5577E','#2DB5A8'],act=m.byCat.filter(c=>c.actual>0);
+  if(!act.length||!(m.incurred>0))return '<div class="pj-m">No costs recorded yet.</div>';
+  return `<div style="display:flex;height:12px;border-radius:99px;overflow:hidden;margin:10px 0 9px;background:var(--pj-bd)">${act.map(c=>`<div title="${esc(c.c)}: ${kes(c.actual)} (${pct(c.actual/m.incurred*100)})" style="width:${(c.actual/m.incurred*100).toFixed(2)}%;background:${col[CATS.indexOf(c.c)%col.length]}"></div>`).join('')}</div>
+   <div style="display:flex;flex-wrap:wrap;gap:5px 14px;font-size:12px">${act.map(c=>`<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col[CATS.indexOf(c.c)%col.length]};margin-right:5px"></span>${esc(c.c)} <b>${kes(c.actual)}</b> <span class="pj-m">${pct(c.actual/m.incurred*100)}</span></span>`).join('')}</div>`;
+}
 function purchaseCard(p,m){return `<div class="pj-c"><div class="pj-ct">🏠 Purchase price &amp; balance (live)</div><div class="pj-cs">The price keeps growing from the booking date, so the amount you must reach moves every day</div><div id="pj-live">${liveBody(p)}</div></div>`;}
 function fundCard(m){
   return `<div class="pj-c"><div class="pj-ct">Funding &amp; site kitty</div><div class="pj-cs">Money sent to the project is a deposit into the kitty; it only becomes an expense when a worker or supplier is paid.</div>
@@ -4453,12 +4629,10 @@ function tabBody(p,m){
     const cats=m.byCat.filter(c=>c.actual>0).map(c=>`<div class="pj-row"><span>${c.c}</span><span><b>${kes(c.actual)}</b> <span class="pj-m">${m.incurred>0?pct(c.actual/m.incurred*100):''}</span></span></div>`).join('');
     const rev=p.type==='income'?`<div class="pj-c"><div class="pj-ct">Revenue & performance</div>${m.rev||m.opex?`<div class="pj-row"><span class="pj-m">Revenue received</span><b>${kes(m.rev)}</b></div><div class="pj-row"><span class="pj-m">Operating costs</span><b>${kes(m.opex)}</b></div><div class="pj-row"><span class="pj-m">Net operating income</span><b class="${m.noi<0?'pj-r':'pj-g'}">${kes(m.noi)}</b></div>`:'<div class="pj-m">Not generating revenue yet — while building, the spend is capitalised cost; revenue starts after handover.</div>'}</div>`:'';
     return `${al.map(a=>`<div class="pj-al ${a[0]==='er'?'pj-er':'pj-wn'}">⚠ ${a[1]}</div>`).join('')}${assetCard(p,m)}
+    ${m.pc?targetCard(p,m):''}
     <div class="pj-grid2">
-     ${m.pc?purchaseCard(p,m):`<div class="pj-c"><div class="pj-ct">💰 Spend vs physical progress</div><div class="pj-cs">Spending should never run far ahead of what has been built</div>
-      <div class="pj-bl" style="display:flex;justify-content:space-between;font-size:12.5px;margin:8px 0 3px"><span>Physical progress</span><b>${pct(m.completion)}</b></div><div class="pj-bar g"><div style="width:${m.completion}%"></div></div>
-      <div class="pj-bl" style="display:flex;justify-content:space-between;font-size:12.5px;margin:10px 0 3px"><span>Budget consumed</span><b>${pct(m.spentPct)}</b></div><div class="pj-bar ${m.spentPct>m.completion+10?'r':m.spentPct>m.completion+3?'a':''}"><div style="width:${clamp(m.spentPct,0,100)}%"></div></div>
-      <div class="pj-al ${v[0]}" style="margin:12px 0 0">${v[1]}</div></div>`}
-     <div class="pj-c"><div class="pj-ct">🧱 Where the money is going</div><div class="pj-cs">Costs incurred so far, by category</div>${cats||'<div class="pj-m">No costs recorded yet.</div>'}
+     ${m.pc?purchaseCard(p,m):(p.type==='income'&&(m.rev||m.opex)?revenueCard(p,m):buildCard(p,m,v))}
+     <div class="pj-c"><div class="pj-ct">🧱 Where the money is going</div><div class="pj-cs">Costs incurred so far, by category</div>${moneyBar(m)}
       <div class="pj-row"><span>💸 Transaction costs (fees)</span><span><b>${kes(m.fees)}</b> <span class="pj-m">${m.moved>0?pct(m.feeRate)+' of money moved':''}</span></span></div></div></div>
     <div class="pj-kp">
      <div class="pj-k"><div class="pj-kl">Outstanding payments</div><div class="pj-kv ${m.outstanding>0?'pj-a':''}">${kes(m.outstanding)}</div><div class="pj-ks">owed to workers & suppliers</div></div>
@@ -4664,7 +4838,7 @@ const api={
   mount(el,h){root=el;hooks=h||{};loadLocal();loaded=true;
     root.innerHTML='<div class="pj"><div id="pj-body"></div><div id="pj-modal"></div></div>';
     render();if(settings.url&&settings.token)pull({silent:true});},
-  go(v){V.name=v;if(v==='list')V.id=null;render();},
+  zoom,go(v){V.name=v;if(v==='list')V.id=null;render();},
   filter(f){V.filter=f;render();},
   open(id){V.name='project';V.id=id;V.tab='overview';V.cat='All';render();},
   tab(t){V.tab=t;const g=groupOf(t);if(g){V.last=V.last||{};V.last[g[0]]=t;}render();},cat(c){V.cat=c;render();},
