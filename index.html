@@ -1247,19 +1247,20 @@ function blendedYield(){
   let landMonths=12;
   if(rows.length){ const e=rows.map(r=>r.date).sort()[0]; landMonths=Math.min(12,Math.max(1,(now.getFullYear()*12+now.getMonth())-(Number(e.slice(0,4))*12+Number(e.slice(5,7))-1)+1)); }
   const landNet=db.Income.filter(inW).reduce((s,r)=>s+Number(r.amount||0),0)-db.Expenses.filter(inW).reduce((s,r)=>s+xAmt(r),0);
-  const landAnnual=landNet*12/landMonths;
-  let cashAnnual=0, cashBase=0, cashMonths=0;
+  const landGrossNet=db.Income.filter(inW).reduce((s,r)=>s+Number(r.amount||0),0), landAnnual=landNet*12/landMonths, landGrossAnnual=landGrossNet*12/landMonths;   // gross = income before expenses
+  let cashAnnual=0, cashGrossAnnual=0, cashBase=0, cashMonths=0;
   snap.instruments.forEach(i=>{
     const es=snap.entries.filter(e=>e.instrumentId===i.id).sort((a,b)=>a.month.localeCompare(b.month)).slice(-12);
-    let net=0, m=0; const opens=[];
+    let net=0, gross=0, m=0; const opens=[];
     es.forEach((e,ix)=>{ const n=Number(e.netInterest||0), o=entryCapital(e); if(o>0&&n/o*12>0.5) return;
       if(ix===es.length-1&&es.length>1&&n===0&&Number(e.grossInterest||0)===0&&Number(e.valueChange||0)===0&&o>0) return;   // latest month not credited yet — not a real 0%
-      net+=n; m++; if(o>0) opens.push(o); });
-    if(m&&opens.length){ cashAnnual+=net*12/m; cashBase+=opens.reduce((a,b)=>a+b,0)/opens.length; cashMonths=Math.max(cashMonths,m); }
+      net+=n; gross+=(Number(e.grossInterest||0)>0?Number(e.grossInterest):n+Number(e.tax||0)); m++; if(o>0) opens.push(o); });
+    if(m&&opens.length){ cashAnnual+=net*12/m; cashGrossAnnual+=gross*12/m; cashBase+=opens.reduce((a,b)=>a+b,0)/opens.length; cashMonths=Math.max(cashMonths,m); }
   });
   const base=land+cashBase; if(!(base>0)) return null;
   return { pct:(landAnnual+cashAnnual)/base*100, landPct:land>0?landAnnual/land*100:null, cashPct:cashBase>0?cashAnnual/cashBase*100:null,
-           wLand:land/base*100, wCash:cashBase/base*100, landMonths, cashMonths, landAnnual, cashAnnual, landBase:land, cashBase };
+           wLand:land/base*100, wCash:cashBase/base*100, landMonths, cashMonths, landAnnual, cashAnnual, landBase:land, cashBase,
+           landGrossAnnual, cashGrossAnnual, grossPct:(landGrossAnnual+cashGrossAnnual)/base*100, landGrossPct:land>0?landGrossAnnual/land*100:null, cashGrossPct:cashBase>0?cashGrossAnnual/cashBase*100:null };
 }
 // Capital actually at work in a month. With the deposit / withdrawal dates entered it is the AVERAGE DAILY BALANCE
 // (each shilling counted for the days it was really in the fund); with no dates it is the opening balance, as before.
@@ -1311,21 +1312,21 @@ function deleteInflation(m){
 // Annualised performance of every module that earns revenue, with margin over inflation.
 function perfData(){
   const infl=getInflation(), out={};
-  const mk=(key,label,icon,annual,pct,base,note,click)=>{
-    const beat=pct-infl, beatKES=annual-base*infl/100;
-    out[key]={key,label,icon,annual,pct,base,note,click,beat,beatKES,beating:beat>=0};
+  const mk=(key,label,icon,annual,pct,base,note,click,gAnnual)=>{
+    const beat=pct-infl, beatKES=annual-base*infl/100, ga=(gAnnual==null?annual:gAnnual);   // annual / pct are NET; beating inflation is measured on the net
+    out[key]={key,label,icon,annual,pct,base,note,click,beat,beatKES,beating:beat>=0,gross:ga,grossPct:base>0?ga/base*100:pct};
   };
   const y=blendedYield();
   if(y){
-    if(db.Income.length && y.landPct!==null) mk('land','Land & Property','🏡',y.landAnnual,y.landPct,y.landBase,`Net income (rent etc. minus expenses) over ${y.landMonths} month${y.landMonths!==1?'s':''} of records, scaled to a year, ÷ market value`,"showView('assets')");
-    if(y.cashPct!==null && y.cashBase>0) mk('cash','Cash & Investments','💵',y.cashAnnual,y.cashPct,y.cashBase,`Net interest after tax over ${y.cashMonths} recorded month${y.cashMonths!==1?'s':''}, scaled to a year, ÷ average balance`,"showView('yield')");
+    if(db.Income.length && y.landPct!==null) mk('land','Land & Property','🏡',y.landAnnual,y.landPct,y.landBase,`Net income (rent etc. minus expenses) over ${y.landMonths} month${y.landMonths!==1?'s':''} of records, scaled to a year, ÷ market value (gross = income before expenses)`,"showView('assets')",y.landGrossAnnual);
+    if(y.cashPct!==null && y.cashBase>0) mk('cash','Cash & Investments','💵',y.cashAnnual,y.cashPct,y.cashBase,`Net interest after tax over ${y.cashMonths} recorded month${y.cashMonths!==1?'s':''}, scaled to a year, ÷ average balance (gross = before withholding tax)`,"showView('yield')",y.cashGrossAnnual);
   }
   try{
     const p=(typeof PJ!=='undefined'&&PJ.perfSummary)?PJ.perfSummary():null;
-    if(p&&p.count>0&&p.pct!==null) mk('projects','Projects','🏗️',p.annual,p.pct,p.invested,`Net operating income of ${p.count} income-generating project${p.count!==1?'s':''}, scaled to a year, ÷ cost incurred`,"showView('projects')");
+    if(p&&p.count>0&&p.pct!==null) mk('projects','Projects','🏗️',p.annual,p.pct,p.invested,`Net operating income of ${p.count} income-generating project${p.count!==1?'s':''}, scaled to a year, ÷ cost incurred (gross = revenue before operating costs)`,"showView('projects')",p.grossAnnual);
   }catch(e){}
   const list=Object.values(out);
-  if(list.length>1){ const ann=list.reduce((a,r)=>a+r.annual,0), base=list.reduce((a,r)=>a+r.base,0); if(base>0) out.total={key:'total',label:'All revenue-earning modules',icon:'Σ',annual:ann,pct:ann/base*100,base,note:'Total annualised income ÷ total capital working to earn it',beat:ann/base*100-infl,beatKES:ann-base*infl/100,beating:ann/base*100>=infl}; }
+  if(list.length>1){ const ann=list.reduce((a,r)=>a+r.annual,0), gAnn=list.reduce((a,r)=>a+r.gross,0), base=list.reduce((a,r)=>a+r.base,0); if(base>0) out.total={key:'total',label:'All revenue-earning modules',icon:'Σ',annual:ann,pct:ann/base*100,gross:gAnn,grossPct:gAnn/base*100,base,note:'Total annualised income ÷ total capital working to earn it',beat:ann/base*100-infl,beatKES:ann-base*infl/100,beating:ann/base*100>=infl}; }
   return {infl,out};
 }
 const ppFmt=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(2)+' %';
@@ -1333,8 +1334,8 @@ function perfStrip(key,flavor){
   const {infl,out}=perfData(), r=out[key]; if(!r) return '';
   const col=r.beating?'var(--green)':'var(--red)';
   const verdict=r.beating?'ahead of':'behind';
-  const items=[['Annualised income',fmtKES(r.annual),r.label+' · a year at the current pace',''],
-    ['Annualised return',r.pct.toFixed(2)+'%','on '+fmtCompact(r.base)+' working capital',''],
+  const items=[['Net annualised income',fmtKES(r.annual),r.label+' · a year at the current pace (gross '+fmtKES(r.gross)+')',''],
+    ['Net annualised return',r.pct.toFixed(2)+'%','on '+fmtCompact(r.base)+' working capital (gross '+r.grossPct.toFixed(2)+'%)',''],
     ['Inflation (annualised)',infl+'%','latest monthly figure, set on the Overview page',''],
     [r.beating?'Beating inflation by':'Behind inflation by',ppFmt(r.beat),`${r.beating?'+':'−'}${fmtKES(Math.abs(r.beatKES))} a year ${verdict} inflation`,col]];
   if(flavor==='pj') return `<div class="pj-kp" title="${r.note.replace(/"/g,'&quot;')}">${items.map(i=>`<div class="pj-k"><div class="pj-kl">${i[0]}</div><div class="pj-kv" ${i[3]?`style="color:${i[3]}"`:''}>${i[1]}</div><div class="pj-ks">${i[2]}</div></div>`).join('')}</div>`;
@@ -1343,14 +1344,17 @@ function perfStrip(key,flavor){
 function perfVsInflationCard(){
   const {infl,out}=perfData(), rows=Object.values(out);
   if(!rows.length) return `<div class="card"><div class="card-title">📈 Annualised performance vs inflation</div><div class="card-sub">Record some income, interest or project revenue and each module's yearly return — and whether it beats ${infl}% inflation — will show here.</div></div>`;
-  const tr=r=>{ const c=r.beating?'green':'red', tot=r.key==='total';
+  const tr=r=>{ const c=r.beating?'green':'red', tot=r.key==='total', R='text-align:right';
     return `<tr style="${tot?'border-top:2px solid var(--border2);font-weight:700':(r.click?'cursor:pointer':'')}" ${r.click&&!tot?`onclick="${r.click}"`:''} title="${r.note.replace(/"/g,'&quot;')}">
-      <td>${r.icon} ${r.label}</td><td style="text-align:right">${fmtKES(r.annual)}</td><td style="text-align:right">${r.pct.toFixed(2)}%</td><td style="text-align:right;color:var(--muted)">${infl}%</td>
-      <td style="text-align:right" class="${c}"><b>${ppFmt(r.beat)}</b><div style="font-size:11px;font-weight:400">${r.beating?'beating':'behind'} · ${r.beatKES>=0?'+':'−'}${fmtKES(Math.abs(r.beatKES))}/yr</div></td></tr>`; };
+      <td>${r.icon} ${r.label}</td>
+      <td style="${R};color:var(--muted)">${fmtKES(r.gross)}</td><td style="${R};color:var(--muted)">${r.grossPct.toFixed(2)}%</td>
+      <td style="${R}">${fmtKES(r.annual)}</td><td style="${R}">${r.pct.toFixed(2)}%</td>
+      <td style="${R};color:var(--muted)">${infl}%</td>
+      <td style="${R}" class="${c}"><b>${ppFmt(r.beat)}</b><div style="font-size:11px;font-weight:400">${r.beating?'beating':'behind'} · ${r.beatKES>=0?'+':'−'}${fmtKES(Math.abs(r.beatKES))}/yr</div></td></tr>`; };
   const t=out.total||rows[0], il=inflationLatest(), infl_lbl=il?mLabel(il.month)+': '+il.rate+'%':infl+'%';
   return `<div class="card"><div class="card-title">📈 Annualised performance vs inflation</div>
-    <div class="card-sub">Each revenue-earning module scaled to a full year and compared with the latest annualised headline inflation you entered (${infl_lbl}). “Beating by” is the real return — annualised return minus inflation, in % — what you gain in buying power. Hover a row for how it's worked out.</div>
-    <div class="table-wrap"><table><thead><tr><th>Module</th><th style="text-align:right">Annualised income</th><th style="text-align:right">Annualised %</th><th style="text-align:right">Inflation (annualised)</th><th style="text-align:right">Beating inflation by</th></tr></thead><tbody>${rows.map(tr).join('')}</tbody></table></div>
+    <div class="card-sub">Each revenue-earning module scaled to a full year and compared with the latest annualised headline inflation you entered (${infl_lbl}). Gross is before expenses and tax; net is what you keep (land: income − expenses; cash: interest after withholding tax; projects: revenue − operating costs). “Beating by” uses the <b>net</b> return minus inflation, in % — what you gain in buying power. Hover a row for how it's worked out.</div>
+    <div class="table-wrap"><table><thead><tr><th rowspan="2">Module</th><th colspan="2" style="text-align:center;border-bottom:1px solid var(--border2)">Gross <span style="font-weight:400;text-transform:none">(before expenses &amp; tax)</span></th><th colspan="2" style="text-align:center;border-bottom:1px solid var(--border2)">Net <span style="font-weight:400;text-transform:none">(what you keep)</span></th><th rowspan="2" style="text-align:right">Inflation (annualised)</th><th rowspan="2" style="text-align:right">Beating inflation by <span style="font-weight:400;text-transform:none">(on net)</span></th></tr><tr><th style="text-align:right">Annualised income</th><th style="text-align:right">Annualised %</th><th style="text-align:right">Annualised income</th><th style="text-align:right">Annualised %</th></tr></thead><tbody>${rows.map(tr).join('')}</tbody></table></div>
     <div class="card-sub" style="margin:10px 0 0">${t.beating?`Overall your real return is positive — you are <b class="green">beating inflation by ${Math.abs(t.beat).toFixed(2)} %</b> (${fmtKES(Math.abs(t.beatKES))} a year of real gain).`:`Overall your real return is negative — you are <b class="red">${Math.abs(t.beat).toFixed(2)} % behind inflation</b> — about ${fmtKES(Math.abs(t.beatKES))} a year of lost buying power.`} Land price growth and project value gains are not counted — this is income only.</div></div>`;
 }
 function inflationCard(){
@@ -1393,49 +1397,61 @@ function monthlyReturnSeries(){
   if(!keys.length) return [];
   const rows=[]; let i=mIdx(keys[0]); const last=mIdx(keys[keys.length-1]);
   for(; i<=last && rows.length<120; i++){
-    const m=mFrom(i); let net=0, base=0;
-    if(landBase>0&&landFirst&&m>=landFirst){ net+=land[m]||0; base+=landBase; }
-    if(cash[m]&&cash[m].base>0){ net+=cash[m].net; base+=cash[m].base; }
-    if(pj&&pj.base>0&&pj.first&&m>=pj.first){ net+=pj.byMonth[m]||0; base+=pj.base; }
+    const m=mFrom(i); let net=0, base=0, nL=0, nC=0, nP=0;
+    if(landBase>0&&landFirst&&m>=landFirst){ nL=land[m]||0; net+=nL; base+=landBase; }
+    if(cash[m]&&cash[m].base>0){ nC=cash[m].net; net+=nC; base+=cash[m].base; }
+    if(pj&&pj.base>0&&pj.first&&m>=pj.first){ nP=pj.byMonth[m]||0; net+=nP; base+=pj.base; }
     if(!(base>0)) continue;
+    // each module's own NET return for the month: its net income ×12 ÷ the capital that module works on (same method as the Blended net yield card)
+    const lB=(landBase>0&&landFirst&&m>=landFirst)?landBase:0, cB=(cash[m]&&cash[m].base>0)?cash[m].base:0, pB=(pj&&pj.base>0&&pj.first&&m>=pj.first)?pj.base:0;
+    const parts={land:lB>0?nL*12/lB*100:null, cash:cB>0?nC*12/cB*100:null, proj:pB>0?nP*12/pB*100:null};
     const ret=net*12/base*100, infl=inflationFor(m);
-    rows.push({m,net,base,ret,infl,real:infl===null?null:ret-infl});
+    rows.push({m,net,base,ret,parts,infl,real:infl===null?null:ret-infl});
   }
   return rows;
 }
 function monthlyReturnCard(){
   const chip=(on,n,l)=>`<button class="opt-chip${on?' active':''}" onclick="setMrPeriod(${n})">${l}</button>`;
   const all=monthlyReturnSeries(), rows=mrPeriod?all.slice(-mrPeriod):all;
-  const head=`<div class="perf-head"><div><div class="card-title">📊 Monthly return vs inflation</div><div class="card-sub" style="margin-bottom:0">Overall return of all revenue-earning modules each month, annualised (monthly income × 12 ÷ capital) — compared with the annualised headline inflation you entered</div></div>
+  const head=`<div class="perf-head"><div><div class="card-title">📊 Monthly return vs inflation</div><div class="card-sub" style="margin-bottom:0">Each bar is that module's <b>net</b> return for the month, annualised (net income × 12 ÷ the capital that module works on) — the same method as the Blended net yield card. The hollow dots are all modules blended together, and the red line is the annualised headline inflation you entered</div></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${chip(mrPeriod===6,6,'6M')}${chip(mrPeriod===12,12,'12M')}${chip(mrPeriod===0,0,'All')}${czBtns('mr')}</div></div>`;
   if(!rows.length) return `<div class="card" id="mr-card">${head}<div class="chart-empty" style="padding:18px;color:var(--muted);text-align:center;font-size:13px">Record some income, interest or project revenue to see the monthly return.</div></div>`;
   const W=Math.max(560,rows.length*CZ.mr+80), H=300, padL=52, padR=14, padT=24, padB=46;
-  const vals=[0]; rows.forEach(r=>{ vals.push(r.ret); if(r.infl!==null) vals.push(r.infl); });
+  const MODS=[['land','Land & Property','#4F8EF7'],['cash','Cash & Investments','#34C97B'],['proj','Projects','#8B7CF6']];
+  const present=MODS.filter(md=>rows.some(r=>r.parts[md[0]]!==null));
+  const vals=[0]; rows.forEach(r=>{ present.forEach(md=>{ if(r.parts[md[0]]!==null) vals.push(r.parts[md[0]]); }); vals.push(r.ret); if(r.infl!==null) vals.push(r.infl); });
   let max=Math.max(...vals), min=Math.min(...vals); if(max===min) max=min+1; const span=max-min; max+=span*.08; if(min<0) min-=span*.08;
   const y=v=>padT+(max-v)/(max-min)*(H-padT-padB), y0=y(0), gw=(W-padL-padR)/rows.length, bw=Math.min(34,gw*.55);
   const grid=[0,1,2,3,4].map(i=>{ const v=min+(max-min)*i/4; return `<line x1="${padL}" x2="${W-padR}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" style="stroke:var(--border)"/><text x="${padL-6}" y="${(y(v)+3).toFixed(1)}" text-anchor="end">${v.toFixed(1)}%</text>`; }).join('');
-  const bars=rows.map((r,i)=>{ const cx=padL+gw*i+gw/2, top=Math.min(y(r.ret),y0), h=Math.max(Math.abs(y(r.ret)-y0),1);
-    const tip=`${mLabel(r.m)}: return ${r.ret.toFixed(2)}% a year · inflation ${r.infl===null?'not entered':r.infl.toFixed(2)+'%'}${r.real===null?'':' · real return '+(r.real>=0?'+':'−')+Math.abs(r.real).toFixed(2)+' %'}`;
+  const nb=Math.max(present.length,1), gbw=Math.min(26,gw*.8/nb), gtot=gbw*nb+(nb-1)*2;
+  const bars=rows.map((r,i)=>{ const cx=padL+gw*i+gw/2;
+    const tip=`${mLabel(r.m)}: net return a year`+present.map(md=>` · ${md[1]} ${r.parts[md[0]]===null?'no data':(r.parts[md[0]]>=0?'':'−')+Math.abs(r.parts[md[0]]).toFixed(2)+'%'}`).join('')+` · blended ${r.ret.toFixed(2)}% · inflation ${r.infl===null?'not entered':r.infl.toFixed(2)+'%'}${r.real===null?'':' · blended real return '+(r.real>=0?'+':'−')+Math.abs(r.real).toFixed(2)+' %'}`;
+    const segs=present.map((md,j)=>{ const v=r.parts[md[0]]; if(v===null) return '';
+      const x=cx-gtot/2+j*(gbw+2), top=Math.min(y(v),y0), h=Math.max(Math.abs(y(v)-y0),1);
+      return `<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${gbw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${md[2]}"><title>${tip}</title></rect>`+(gbw>=19?`<text x="${(x+gbw/2).toFixed(1)}" y="${(v>=0?top-4:top+h+10).toFixed(1)}" text-anchor="middle" style="font-size:9px"><title>${tip}</title>${v.toFixed(1)}%</text>`:''); }).join('');
     const yy=mLabel(r.m).slice(-4), mm=new Date(Number(r.m.slice(0,4)),Number(r.m.slice(5,7))-1,1).toLocaleString('en-KE',{month:'short'});
-    return `<rect x="${(cx-bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="#4F8EF7"><title>${tip}</title></rect>
-      <text x="${cx.toFixed(1)}" y="${(r.ret>=0?top-5:top+h+12).toFixed(1)}" text-anchor="middle" style="font-size:10px">${r.ret.toFixed(1)}%</text>
-      <text x="${cx.toFixed(1)}" y="${H-28}" text-anchor="middle" style="fill:var(--text)">${mm}</text><text x="${cx.toFixed(1)}" y="${H-14}" text-anchor="middle" style="font-size:9.5px">${yy}</text>`; }).join('');
+    return `${segs}<text x="${cx.toFixed(1)}" y="${H-28}" text-anchor="middle" style="fill:var(--text)">${mm}</text><text x="${cx.toFixed(1)}" y="${H-14}" text-anchor="middle" style="font-size:9.5px">${yy}</text>`; }).join('');
+  const blendD=rows.length>1?'M'+rows.map((r,i)=>`${(padL+gw*i+gw/2).toFixed(1)},${y(r.ret).toFixed(1)}`).join(' L'):'';
+  const blend=(blendD?`<path d="${blendD}" fill="none" style="stroke:var(--text)" stroke-opacity=".55" stroke-width="1.4" stroke-dasharray="4,3"/>`:'')+rows.map((r,i)=>`<circle cx="${(padL+gw*i+gw/2).toFixed(1)}" cy="${y(r.ret).toFixed(1)}" r="3.6" style="fill:var(--card);stroke:var(--text)" stroke-width="1.6"><title>${mLabel(r.m)}: blended ${r.ret.toFixed(2)}% a year (all modules together)</title></circle>`).join('');
   const pts=rows.map((r,i)=>r.infl===null?null:[padL+gw*i+gw/2,y(r.infl),r]);
   let d='', pen=false; pts.forEach(p=>{ if(!p){ pen=false; return; } d+=(pen?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)+' '; pen=true; });
   const line=d?`<path d="${d}" fill="none" stroke="#F05252" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:'';
   const dots=pts.filter(Boolean).map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="#F05252"><title>${mLabel(p[2].m)}: inflation ${p[2].infl.toFixed(2)}% (annualised)</title></circle>`).join('');
   const withI=rows.filter(r=>r.infl!==null), avgR=withI.length?withI.reduce((s,r)=>s+r.ret,0)/withI.length:null, avgI=withI.length?withI.reduce((s,r)=>s+r.infl,0)/withI.length:null;
-  const verdict=avgR===null?`<span style="color:var(--amber)">No inflation entered for these months yet — add it in the Monthly inflation card below to draw the red line.</span>`:`Across the ${withI.length} month${withI.length!==1?'s':''} with inflation entered, the average return was <b>${avgR.toFixed(2)}%</b> against <b>${avgI.toFixed(2)}%</b> inflation — a real return of <b class="${avgR-avgI>=0?'green':'red'}">${avgR-avgI>=0?'+':'−'}${Math.abs(avgR-avgI).toFixed(2)} %</b>.`;
-  const legend=`<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:10px 0 2px"><span><span class="comp-dot" style="background:#4F8EF7;display:inline-block;margin-right:6px"></span>Overall return (annualised)</span><span><span style="display:inline-block;width:18px;height:3px;background:#F05252;vertical-align:middle;margin-right:6px;border-radius:2px"></span>Inflation (annualised headline)</span></div>`;
-  return `<div class="card" id="mr-card">${head}${legend}<div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px;margin-top:6px">${grid}<line x1="${padL}" x2="${W-padR}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" style="stroke:var(--border2)"/>${bars}${line}${dots}</svg></div>
+  const avgOf=f=>{ const v=rows.map(f).filter(x=>x!==null&&x!==undefined); return v.length?v.reduce((x,y)=>x+y,0)/v.length:null; };
+  const modAvg=present.map(md=>{ const v=avgOf(r=>r.parts[md[0]]); return v===null?'':`${md[1]} <b>${v.toFixed(2)}%</b>`; }).filter(Boolean).join(' · ');
+  const avgB=avgOf(r=>r.ret);
+  const verdict=`Average over the ${rows.length} month${rows.length!==1?'s':''} shown: ${modAvg} · blended <b>${avgB.toFixed(2)}%</b>`+(avgR===null?`. <span style="color:var(--amber)">No inflation entered for these months yet — add it in the Monthly inflation card below to draw the red line.</span>`:` against <b>${avgI.toFixed(2)}%</b> inflation — a blended real return of <b class="${avgR-avgI>=0?'green':'red'}">${avgR-avgI>=0?'+':'−'}${Math.abs(avgR-avgI).toFixed(2)} %</b>. With 12M selected these averages line up with the Blended net yield card (which is the same calculation over the last 12 months).`);
+  const legend=`<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:10px 0 2px">${present.map(md=>`<span><span class="comp-dot" style="background:${md[2]};display:inline-block;margin-right:6px"></span>${md[1]}</span>`).join('')}<span><span class="comp-dot" style="display:inline-block;margin-right:6px;background:var(--card);border:2px solid var(--text);width:9px;height:9px;box-sizing:border-box"></span>Blended (all modules)</span><span><span style="display:inline-block;width:18px;height:3px;background:#F05252;vertical-align:middle;margin-right:6px;border-radius:2px"></span>Inflation (annualised headline)</span></div>`;
+  return `<div class="card" id="mr-card">${head}${legend}<div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px;margin-top:6px">${grid}<line x1="${padL}" x2="${W-padR}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" style="stroke:var(--border2)"/>${bars}${blend}${line}${dots}</svg></div>
     <div class="card-sub" style="margin:8px 0 0">${verdict} Hover a bar or dot for the exact figures. Return = net land income, net interest and project operating income, each over the capital that earned it; price growth and project value gains are not counted.</div></div>`;
 }
 function blendedYieldKPI(){
   const y=blendedYield(); if(!y) return '';
   const f=v=>v===null?'—':v.toFixed(2)+'%', snap=ytSnap();
   const lbl=snap.instruments.length&&snap.instruments.every(i=>i.category==='MMF')?'MMF':'Cash';
-  const tip=`Annualised cash yield. Cash: net interest over ${y.cashMonths||0} recorded month(s), scaled to a year, ÷ average balance. Land: income − expenses over ${y.landMonths} month(s) of records, scaled to a year, ÷ market value (price growth excluded). Weights: ${y.wLand.toFixed(0)}% land, ${y.wCash.toFixed(0)}% cash.`;
-  return `<div class="kpi" title="${tip}"><div class="kpi-label">Blended cash yield (p.a.)</div><div class="kpi-val ${y.pct>=0?'green':'red'}">${y.pct.toFixed(2)}%</div><div class="kpi-sub">Land ${f(y.landPct)} · ${lbl} ${f(y.cashPct)} · annualised</div></div>`;
+  const tip=`NET annualised yield — what you actually keep. Cash: interest after withholding tax over ${y.cashMonths||0} recorded month(s), scaled to a year, ÷ average balance. Land: income − expenses over ${y.landMonths} month(s) of records, scaled to a year, ÷ market value (price growth excluded). Weights: ${y.wLand.toFixed(0)}% land, ${y.wCash.toFixed(0)}% cash. For comparison, the gross figure (before expenses and tax) is ${y.grossPct.toFixed(2)}%.`;
+  return `<div class="kpi" title="${tip}"><div class="kpi-label">Blended net yield (p.a.)</div><div class="kpi-val ${y.pct>=0?'green':'red'}">${y.pct.toFixed(2)}%</div><div class="kpi-sub">Land ${f(y.landPct)} · ${lbl} ${f(y.cashPct)} · net, annualised</div></div>`;
 }
 function ytHasData(){ return ytSnap().entries.length>0; }
 function wealthSegments(){
@@ -4873,12 +4889,12 @@ const api={
   perfSummary(){
     if(!loaded){loadLocal();loaded=true;}
     // Income-generating projects that have revenue and cost on record; ones already handed over to Land & Property are counted there.
-    let ann=0,inv=0,n=0;const list=[];
+    let ann=0,inv=0,n=0,gross=0;const list=[];
     db.Projects.filter(p=>p.type==='income'&&p.status!=='Archived'&&!p.handedOverAt).forEach(p=>{
       const m=metrics(p); if(!rows('Revenue',p.id).length||!(m.incurred>0)) return;
-      ann+=m.annNoi;inv+=m.incurred;n++;list.push({name:p.name,annual:m.annNoi,invested:m.incurred,pct:m.roi});
+      ann+=m.annNoi;inv+=m.incurred;n++;gross+=m.rev/Math.max(m.months,1)*12;list.push({name:p.name,annual:m.annNoi,invested:m.incurred,pct:m.roi});
     });
-    return {count:n,annual:ann,invested:inv,pct:inv>0?ann/inv*100:null,rows:list};
+    return {count:n,annual:ann,grossAnnual:gross,invested:inv,pct:inv>0?ann/inv*100:null,rows:list};
   },
   monthlyPerf(){
     if(!loaded){loadLocal();loaded=true;}
