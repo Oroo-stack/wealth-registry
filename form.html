@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects</title>
+<script>(function(){try{var t=localStorage.getItem('pj_theme')||'auto',m=t==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;document.documentElement.setAttribute('data-theme',m);}catch(e){}})();</script>
+<style>
+:root{--bg:#12141c;--card:#1c2133;--border:#2a3050;--border2:#363d63;--text:#e8ebf7;--muted:#8a93b5;--accent:#4f8ef7;--accent-bg:#1d2b4d;--green:#34c97b;--amber:#f5a623;--red:#f05c5c;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:dark}
+:root[data-theme="light"]{--bg:#f3f5fa;--card:#ffffff;--border:#dce1ee;--border2:#c6cde0;--text:#1b2033;--muted:#5c6684;--accent-bg:#e4edfd;--green:#12915a;--amber:#b86f00;--red:#d13b3b;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans)}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50}
+.bar b{font-size:16px}.bar button{background:transparent;border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+.pj{--pj-bg:var(--bg,#12141c);--pj-card:var(--card,#1c2133);--pj-bd:var(--border,#2a3050);--pj-bd2:var(--border2,#363d63);--pj-tx:var(--text,#e8ebf7);--pj-mu:var(--muted,#8a93b5);--pj-ac:var(--accent,#4f8ef7);--pj-acb:var(--accent-bg,#1d2b4d);--pj-gr:var(--green,#34c97b);--pj-am:var(--amber,#f5a623);--pj-rd:var(--red,#f05c5c);color:var(--pj-tx);font-family:var(--sans,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);font-size:14px;line-height:1.45}
+.pj *{box-sizing:border-box}
+.pj-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.pj-h1{font-size:22px;font-weight:700;margin:0}.pj-sub{color:var(--pj-mu);font-size:12.5px}
+.svg-fit{width:100%;height:auto;display:block}.svg-fit text{fill:var(--muted);font-size:11px;font-family:var(--sans)}
+.pj-crumb{color:var(--pj-mu);cursor:pointer;font-size:12.5px;margin-bottom:4px}.pj-crumb:hover{color:var(--pj-tx)}
+.pj-b{background:var(--pj-card);border:1px solid var(--pj-bd2);color:var(--pj-tx);border-radius:8px;padding:7px 13px;font-size:13px;cursor:pointer;font-family:inherit}
+.pj-b:hover{border-color:var(--pj-ac)}.pj-p{background:var(--pj-ac);border-color:var(--pj-ac);color:#fff}.pj-sm{padding:3px 9px;font-size:12px}.pj-d:hover{border-color:var(--pj-rd);color:var(--pj-rd)}
+.pj-bdg{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11.5px;background:var(--pj-acb);color:var(--pj-ac)}
+.pj-ok{background:rgba(52,201,123,.14);color:var(--pj-gr)}.pj-wn{background:rgba(245,166,35,.15);color:var(--pj-am)}.pj-er{background:rgba(240,92,92,.15);color:var(--pj-rd)}
+.pj-sync{font-size:12px;display:inline-flex;gap:6px;align-items:center;color:var(--pj-mu)}.pj-dot{width:8px;height:8px;border-radius:50%;background:var(--pj-am)}.pj-sync.ok .pj-dot{background:var(--pj-gr)}.pj-sync.err .pj-dot{background:var(--pj-rd)}
+.pj-kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.pj-k{background:var(--pj-card);border:1px solid var(--pj-bd);border-radius:12px;padding:13px 15px;min-width:0}
+.pj-kl{font-size:11px;color:var(--pj-mu);text-transform:uppercase;letter-spacing:.4px}.pj-kv{font-size:21px;font-weight:700;margin:3px 0}.pj-ks{font-size:11.5px;color:var(--pj-mu)}
+.pj-g{color:var(--pj-gr)}.pj-a{color:var(--pj-am)}.pj-r{color:var(--pj-rd)}.pj-m{color:var(--pj-mu)}
+.pj-c{background:var(--pj-card);border:1px solid var(--pj-bd);border-radius:12px;padding:15px 17px;margin-bottom:14px;min-width:0}
+.pj-ct{font-weight:700;margin-bottom:2px}.pj-cs{color:var(--pj-mu);font-size:12px;margin-bottom:10px}
+.pj-bar{height:8px;background:var(--pj-bd);border-radius:99px;overflow:hidden}.pj-bar>div{height:100%;background:var(--pj-ac);border-radius:99px}
+.pj-bar.g>div{background:var(--pj-gr)}.pj-bar.a>div{background:var(--pj-am)}.pj-bar.r>div{background:var(--pj-rd)}
+.pj-tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--pj-bd);margin-bottom:14px}
+.pj-tab{padding:9px 14px;cursor:pointer;color:var(--pj-mu);white-space:nowrap;border-bottom:2px solid transparent;font-size:13.5px}.pj-tab.on{color:var(--pj-ac);border-color:var(--pj-ac)}
+.pj-tw{overflow-x:auto}.pj-t{width:100%;border-collapse:collapse;font-size:13px}
+.pj-t th{text-align:left;font-size:11px;color:var(--pj-mu);text-transform:uppercase;letter-spacing:.3px;padding:8px 10px;border-bottom:1px solid var(--pj-bd2);white-space:nowrap}
+.pj-t td{padding:9px 10px;border-bottom:1px solid var(--pj-bd);vertical-align:top}.pj-t tr:last-child td{border-bottom:none}
+.pj-n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.pj-act{white-space:nowrap;text-align:right}.pj-act .pj-b{margin-left:4px}
+.pj-t tfoot td{font-weight:700;border-top:2px solid var(--pj-bd2)}
+.pj-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.pj-pc{background:var(--pj-card);border:1px solid var(--pj-bd);border-radius:12px;padding:14px 16px;cursor:pointer}.pj-pc:hover{border-color:var(--pj-ac)}
+.pj-chips{display:flex;gap:6px;flex-wrap:wrap}.pj-chip{padding:5px 13px;border-radius:99px;border:1px solid var(--pj-bd2);cursor:pointer;font-size:12.5px;color:var(--pj-mu)}.pj-chip.on{background:var(--pj-acb);border-color:var(--pj-ac);color:var(--pj-ac)}
+.pj-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--pj-bd);font-size:13px}.pj-row:last-child{border-bottom:none}
+.pj-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.pj-grid2{grid-template-columns:1fr}}
+.pj-al{border-radius:10px;padding:9px 13px;margin-bottom:8px;font-size:13px}
+.pj-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:14px}
+.pj-mo{background:var(--pj-card);border:1px solid var(--pj-bd2);border-radius:14px;padding:18px 20px;width:100%;max-width:620px;max-height:92vh;overflow-y:auto}
+.pj-mt{font-weight:700;font-size:16px;margin-bottom:12px}.pj-fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.pj-fg{grid-template-columns:1fr}}
+.pj-f{display:flex;flex-direction:column;gap:4px}.pj-f.w{grid-column:1/-1}.pj-f label{font-size:11px;color:var(--pj-mu);text-transform:uppercase;letter-spacing:.3px}
+.pj-f input,.pj-f select,.pj-f textarea{background:var(--pj-bg);border:1px solid var(--pj-bd2);border-radius:8px;padding:9px 10px;color:var(--pj-tx);font-size:14px;font-family:inherit;width:100%}
+.pj-f textarea{min-height:70px}.pj-err{color:var(--pj-rd);font-size:12px;min-height:16px;margin-top:6px}
+.pj-mf{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.pj-empty{padding:22px;text-align:center;color:var(--pj-mu)}
+.pj-mt0{margin-top:0}.pj-bars .pj-bl{display:flex;justify-content:space-between;font-size:12.5px;margin:9px 0 4px}
+.pj-rpt{background:#fff;color:#111;border-radius:8px;padding:18px 24px;max-width:860px;font-size:12px;line-height:1.35}
+.pj-rpt *{color:#111}.pj-rpt .mu{color:#666!important}
+.pj-rpt .h{font-weight:800;font-size:15px;letter-spacing:.2px}.pj-rpt .sb{font-size:11px;margin:2px 0 8px;border-bottom:2px solid #111;padding-bottom:6px}
+.pj-rpt table{width:100%;border-collapse:collapse;font-size:11.5px;margin:3px 0 6px}
+.pj-rpt th{background:#eee;text-align:left;padding:3px 6px;font-size:10.5px;border-bottom:1px solid #999;white-space:normal}
+.pj-rpt td{padding:2px 6px;border-bottom:1px solid #e4e4e4;vertical-align:top;background:transparent}
+.pj-rpt .n{text-align:right;white-space:nowrap}
+.pj-rpt .sec{font-weight:800;text-transform:uppercase;font-size:11px;margin:11px 0 2px;border-bottom:1px solid #999;padding-bottom:2px;letter-spacing:.2px}
+.pj-rpt tr.tot td{font-weight:700;background:#f0f0f0;border-top:1px solid #999}
+.pj-rpt .box{background:#f6f6f6;border-left:3px solid #111;padding:5px 8px;margin:5px 0;font-size:11.5px}
+.pj-rpt .info td{border:none;padding:1px 8px 1px 0;width:50%}
+.pj-rpt .note{margin-top:10px;font-size:10px;border-top:1px solid #ccc;padding-top:5px}
+@media print{
+  @page{size:A4;margin:0}
+  body *{visibility:hidden!important}
+  #pj-report,#pj-report *{visibility:visible!important}
+  #pj-report{position:absolute!important;left:0;top:0;width:100%!important;max-width:none!important;border-radius:0;padding:14mm 15mm!important}
+  .pj-rpt th,.pj-rpt tr.tot td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+</style></head><body>
+<div class="bar"><b>🏗️ Projects</b><button onclick="var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('pj_theme',t)}catch(e){}">🌓 Theme</button></div>
+<div class="wrap"><div id="pj-root"></div></div>
+<script>
+const PJ=(function(){
+'use strict';
+const LS_S='pj_settings_v1',LS_D='pj_data_v1',LS_N='pj_snap_v1';
+const COLS=['Projects','BudgetLines','Funding','Ledger','Labour','Materials','Milestones','Documents','Revenue','Progress'];
+const CATS=['Labour','Construction materials','Equipment','Professional services','Other / contingency','Purchase payments'];
+const STATUS=['Pending Approval','Approved','Paid','Partially Paid','Rejected','Cancelled'];
+const COUNTED=['Approved','Paid','Partially Paid'];
+const PTYPES=[['personal','Personal / Non-revenue'],['income','Income-generating'],['purchase','Purchase of an appreciating asset (e.g. a unit bought off-plan)']];
+const typeLabel=p=>p.type==='income'?'Income-generating':p.type==='purchase'?'Purchase (appreciating price)':'Personal / Non-revenue';
+const PSTAT=['Planning','Active','On hold','Completed','Archived'];
+const OPEN=['Planning','Active','On hold'];
+let db={},settings={url:'',token:'',actor:''},snap={},pending=[],logs=[],root=null,hooks={},F=null,busy=false;
+let V={name:'list',filter:'Active',id:null,tab:'overview'};
+let badge={t:'warn',m:'Not connected'};
+COLS.forEach(c=>db[c]=[]);
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const num=v=>{const n=parseFloat(String(v==null?'':v).replace(/,/g,''));return isFinite(n)?n:0;};
+const kes=n=>(num(n)<0?'−':'')+'KES '+Math.round(Math.abs(num(n))).toLocaleString('en-KE');
+const cmp=n=>{n=num(n);const a=Math.abs(n),s=n<0?'−':'';return s+(a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+'M':a>=1e3?Math.round(a/1e3)+'K':String(Math.round(a)));};
+const pct=n=>(Math.round(num(n)*10)/10)+'%';
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const rows=(c,pid)=>db[c].filter(r=>r.projectId===pid);
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const dlabel=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'—';
+
+/* ───────── entity definitions (drive every form) ───────── */
+const ENT={
+ Projects:{n:'project',f:[['name','Project name','text',1],['type','Project type','select',1,PTYPES],['status','Status','select',0,PSTAT],['location','Location','text'],['startDate','Start date','date'],['endDate','Target completion','date'],['approvedBudget','Approved budget (KES) — ignored for purchase projects','num'],['purchasePrice','PURCHASE: price at the start date (KES)','num'],['priceGrowth','PURCHASE: price growth (% per year)','num'],['growthComp','PURCHASE: growth compounding','select',0,[['monthly','Monthly'],['daily','Daily'],['annual','Annually'],['continuous','Continuous'],['simple','Simple (no compounding)']]],['priceStart','PURCHASE: price start date (when booking began)','date'],['depositPct','PURCHASE: deposit needed to secure the unit (% of price)','num'],['monthlyDeposit','PURCHASE: your planned monthly deposit (KES)','num'],['completionPct','Manual completion % (used when no milestones)','num'],['estimatedValue','Current estimated property value (KES)','num'],['linkedAsset','Linked asset (Wealth Registry)','asset'],['expectedMonthlyRevenue','Expected monthly revenue (KES) — income projects','num'],['totalUnits','Total units','num'],['occupiedUnits','Occupied / sold units','num'],['description','Description','area']]},
+ BudgetLines:{n:'budget line',f:[['category','Category','select',1,CATS],['planned','Planned amount (KES)','num',1],['notes','Notes','text']]},
+ Funding:{n:'funding record',f:[['source','Funding source (e.g. MMF withdrawal, monthly contribution, loan)','text',1],['committed','Amount committed (KES)','num'],['transferred','Amount transferred to project (KES)','num'],['txCost','Transaction cost (KES) — fee paid to send this money (not part of the amount)','num'],['date','Transfer date','date'],['reference','Reference','text'],['notes','Notes','text']]},
+ Ledger:{n:'transaction',f:[['date','Date','date',1],['category','Category','select',1,CATS],['description','Description','text',1],['amount','Amount (KES)','num',1],['txCost','Transaction cost (KES) — fee for this payment (not part of the amount)','num'],['supplier','Supplier / recipient','text'],['payMethod','Payment method','select',0,['M-Pesa','Bank transfer','Cash','Cheque','Other']],['status','Payment status','select',1,STATUS],['amountPaid','Amount paid so far (KES)','num'],['receiptUrl','Receipt / invoice link','text'],['recordedBy','Recorded by','text']]},
+ Labour:{n:'worker / contractor',f:[['worker','Worker / contractor','text',1],['workCat','Work category (e.g. masonry)','text'],['basis','Payment basis','select',1,['Daily','Weekly','Fixed contract']],['rate','Agreed rate (KES per day / week)','num'],['units','Days / weeks completed','num'],['contractValue','Contract value (KES) — fixed contracts','num'],['notes','Notes','text']]},
+ Materials:{n:'material / equipment',f:[['item','Item','text',1],['kind','Type','select',1,['Consumable material','Purchased equipment','Rented equipment']],['qty','Quantity','num',1],['unit','Unit (bags, tonnes, days…)','text'],['unitCost','Unit cost (KES)','num',1],['txCost','Transaction cost (KES) — fee for this payment (not part of the amount)','num'],['supplier','Supplier','text'],['date','Date','date'],['delivery','Delivery status','select',0,['Ordered','Delivered','Returned']],['status','Payment status','select',1,STATUS],['amountPaid','Amount paid so far (KES)','num'],['registerAsAsset','Register as a family asset?','select',0,['No','Yes']]]},
+ Milestones:{n:'milestone',f:[['title','Milestone (e.g. Foundation completed)','text',1],['plannedDate','Planned date','date'],['completedDate','Completed date','date'],['weight','Weight (% of the project)','num'],['status','Status','select',1,['Planned','In progress','Done']],['notes','Notes','text']]},
+ Documents:{n:'document',f:[['docType','Type','select',1,['Invoice','Contract','Receipt','Approval','Plan / drawing','Permit','Other']],['title','Title','text',1],['url','Link (Google Drive etc.)','text'],['date','Date','date'],['notes','Notes','text']]},
+ Progress:{n:'progress entry',f:[['date','Date recorded','date',1],['pct','Physical progress (% of the whole project complete)','num',1],['notes','Notes (what was observed on site)','text']]},
+ Revenue:{n:'revenue / operating record',f:[['date','Date','date',1],['kind','Kind','select',1,['Revenue','Operating expense']],['description','Description','text'],['amount','Amount (KES)','num',1],['notes','Notes','text']]},
+ LabourPay:{n:'labour payment',pseudo:1,f:[['date','Payment date','date',1],['amount','Amount paid (KES)','num',1],['txCost','Transaction cost (KES) — fee for this payment (not part of the amount)','num'],['payMethod','Payment method','select',0,['M-Pesa','Bank transfer','Cash','Cheque','Other']],['receiptUrl','Reference / receipt link','text']]}
+};
+
+/* ───────── storage ───────── */
+function loadLocal(){
+  try{const s=localStorage.getItem(LS_S);if(s)settings=Object.assign(settings,JSON.parse(s));}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem(LS_D)||'{}');COLS.forEach(c=>{if(Array.isArray(d[c]))db[c]=d[c];});}catch(e){}
+  try{snap=JSON.parse(localStorage.getItem(LS_N)||'{}');}catch(e){snap={};}
+}
+function saveLocal(){try{localStorage.setItem(LS_D,JSON.stringify(db));}catch(e){}}
+function saveSettings(){try{localStorage.setItem(LS_S,JSON.stringify(settings));}catch(e){}}
+function saveSnap(cols){(cols||COLS).forEach(c=>{snap[c]=JSON.stringify(db[c]);});try{localStorage.setItem(LS_N,JSON.stringify(snap));}catch(e){}}
+
+/* ───────── sync ───────── */
+function setBadge(t,m){badge={t,m};const el=$('pj-badge');if(el&&el.lastChild){el.className='pj-sync '+t;el.lastChild.textContent=m;}}
+async function readJson(res){const t=await res.text();try{return JSON.parse(t);}catch(e){throw new Error(/<html|<!doctype/i.test(t)?'got a web page instead of data — redeploy the Apps Script as a new version, access "Anyone"':'unreadable response');}}
+async function pull(opts){
+  opts=opts||{};
+  if(!settings.url||!settings.token){setBadge('warn','Not connected');return false;}
+  if(busy)return false;busy=true;setBadge('warn','Loading…');
+  try{
+    const sep=settings.url.indexOf('?')>-1?'&':'?';
+    const res=await fetch(settings.url+sep+'token='+encodeURIComponent(settings.token)+'&_='+Date.now(),{method:'GET',cache:'no-store'});
+    const j=await readJson(res);
+    if(j.error)throw new Error(j.error==='unauthorized'?'token not accepted':j.error);
+    const d=j.data||{};
+    const sheetEmpty=COLS.every(c=>!Array.isArray(d[c])||!d[c].length);
+    if(sheetEmpty&&COLS.some(c=>db[c].length)&&!opts.force){setBadge('warn','Sheet empty — local data kept');if(!opts.silent&&confirm('The Sheet is empty but this device holds projects. Upload them now?')){busy=false;await push(true);}return false;}
+    COLS.forEach(c=>{if(Array.isArray(d[c]))db[c]=d[c].map(r=>Object.assign({},r));});
+    logs=Array.isArray(d.Project_Log)?d.Project_Log:logs;
+    saveLocal();saveSnap(COLS.filter(c=>Array.isArray(d[c])));
+    setBadge('ok','Synced · '+new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}));
+    render();return true;
+  }catch(e){
+    setBadge('err','Sync failed — using saved data');
+    if(!opts.silent){
+      let msg=e.message||String(e);
+      if(e instanceof TypeError){
+        let reach=true;try{await fetch(settings.url,{mode:'no-cors',cache:'no-store'});}catch(x){reach=false;}
+        msg=reach?'Google answered, but with a web page instead of data. This usually means the Web App is not shared with “Anyone”, was never authorized (run testSetup once in the script editor and click Allow), was not redeployed as a NEW VERSION, or the script has an error. Press “Open test link” on this screen to see exactly which.'
+                 :'That address could not be reached. Check it is the full Web App URL ending in /exec (not the Deployment ID alone) and that you are online.';
+      }
+      alert('Sync failed: '+msg);
+    }
+    return false;
+  }
+  finally{busy=false;}
+}
+async function push(all){
+  saveLocal();
+  if(!settings.url||!settings.token){setBadge('warn','Saved on this device only');return false;}
+  setBadge('warn','Saving…');
+  try{
+    const changed=COLS.filter(c=>all||snap[c]===undefined||JSON.stringify(db[c])!==snap[c]);
+    const payload={};changed.forEach(c=>{payload[c]=db[c];});
+    if(pending.length)payload.auditEntries=pending;
+    const f=new FormData();f.append('token',settings.token);f.append('actor',settings.actor||'unknown');f.append('data',JSON.stringify(payload));
+    const res=await fetch(settings.url,{method:'POST',body:f});const j=await readJson(res);
+    if(!j.ok)throw new Error(j.error==='unauthorized'?'token not accepted':(j.error||'Sheet error'));
+    pending=[];saveSnap(changed);setBadge('ok','Saved · '+new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}));return true;
+  }catch(e){setBadge('err','Save failed — kept on this device');return false;}
+}
+function log(action,pid,details){
+  const e={id:uid(),timestamp:new Date().toISOString(),actor:settings.actor||'unknown',projectId:pid||'',action,details:details||''};
+  pending.push(e);logs.push(e);
+}
+function commit(action,pid,details){log(action,pid,details);saveLocal();push();render();}
+
+/* ───────── purchase calculator: a price that grows while you pay it off ───────── */
+const GROW_LBL={monthly:'monthly',daily:'daily',annual:'annually',continuous:'continuously',simple:'simple (no compounding)'};
+function growthFactor(rate,comp,d){const r=num(rate)/100;switch(comp){case 'daily':return Math.pow(1+r/365,d);case 'annual':return Math.pow(1+r,d/365);case 'continuous':return Math.exp(r*d/365);case 'simple':return 1+r*d/365;default:return Math.pow(1+r/12,d/30.4167);}}
+function purchaseCalc(p,paid,at){
+  const P0=num(p.purchasePrice);if(!(P0>0))return null;
+  at=at||new Date();const start=p.priceStart||p.startDate||today(),d=Math.max((at-new Date(start+'T00:00:00'))/86400000,0);
+  const f=growthFactor(p.priceGrowth,p.growthComp,d),price=P0*f,req=num(p.depositPct),target=req>0?price*req/100:price;
+  return {P0,price,f,days:d,req,target,remainSecure:Math.max(target-paid,0),remainTotal:Math.max(price-paid,0),surplus:paid-target,
+    perDay:P0*(growthFactor(p.priceGrowth,p.growthComp,d+1)-f),start};
+}
+function monthsToSecure(p,paid){
+  const D=num(p.monthlyDeposit);if(!(D>0))return null;let bal=paid;
+  for(let k=1;k<=600;k++){const at=new Date(Date.now()+k*30.4167*86400000),pc=purchaseCalc(p,0,at);bal+=D;if(bal>=pc.target)return {months:k,target:pc.target,at};}
+  return {months:null};
+}
+
+/* ───────── analysis ───────── */
+const paidOf=r=>(r.status==='Paid'&&!num(r.amountPaid))?num(r.amount):num(r.amountPaid);
+function labourStats(pid){
+  const led=rows('Ledger',pid).filter(r=>COUNTED.includes(r.status));
+  return rows('Labour',pid).map(w=>{
+    const due=w.basis==='Fixed contract'?num(w.contractValue):num(w.rate)*num(w.units);
+    const paid=led.filter(r=>r.linkedType==='labour'&&r.linkedId===w.id).reduce((s,r)=>s+paidOf(r),0);
+    return {w,due,paid,balance:Math.max(due-paid,0)};
+  });
+}
+function metrics(p){
+  const pid=p.id,led=rows('Ledger',pid).filter(r=>COUNTED.includes(r.status)),lab=labourStats(pid);
+  const planned=rows('BudgetLines',pid).reduce((s,r)=>s+num(r.planned),0);
+  const paid0=led.reduce((s,r)=>s+paidOf(r),0),pc=(p.type==='purchase')?purchaseCalc(p,paid0):null;
+  const budget=pc?pc.target:(num(p.approvedBudget)||planned);   // a purchase project aims at the live deposit target
+  const billed=led.reduce((s,r)=>s+num(r.amount),0), paid=led.reduce((s,r)=>s+paidOf(r),0);
+  const labBal=lab.reduce((s,x)=>s+x.balance,0);
+  const incurred=billed+labBal, outstanding=(billed-paid)+labBal, remaining=budget-incurred;
+  const committed=rows('Funding',pid).reduce((s,r)=>s+num(r.committed),0), transferred=rows('Funding',pid).reduce((s,r)=>s+num(r.transferred),0);
+  const allLed=rows('Ledger',pid).filter(r=>r.status!=='Rejected'&&r.status!=='Cancelled');
+  const ledgerFees=allLed.reduce((s,r)=>s+num(r.txCost),0), fundFees=rows('Funding',pid).reduce((s,r)=>s+num(r.txCost),0), fees=ledgerFees+fundFees;
+  const moved=paid+transferred, feeRate=moved>0?fees/moved*100:0, totalOut=paid+fees;
+  // site kitty = money sent to the project minus what has been paid out of it (payment fees come out of the kitty too)
+  const available=transferred-paid-ledgerFees, gap=Math.max(budget-committed,0), shortfall=Math.max(outstanding-Math.max(available,0),0);
+  const ms=rows('Milestones',pid), wsum=ms.reduce((s,m)=>s+(num(m.weight)||0),0);
+  let completion=num(p.completionPct);
+  if(ms.length){const w=m=>wsum>0?num(m.weight):1,tot=ms.reduce((s,m)=>s+w(m),0),done=ms.filter(m=>m.status==='Done').reduce((s,m)=>s+w(m),0);completion=tot>0?done/tot*100:0;}
+  if(pc)completion=pc.target>0?paid/pc.target*100:0;   // progress = how much of the target is paid
+  const pg=rows('Progress',pid).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.createdAt).localeCompare(String(b.createdAt))),lastProg=pg.length?pg[pg.length-1]:null;
+  if(lastProg&&!pc)completion=num(lastProg.pct);   // manually logged physical progress wins over milestone arithmetic
+  completion=clamp(completion,0,100);
+  const spentPct=budget>0?incurred/budget*100:0, c=completion/100;
+  // Estimated total at completion: not started → the budget; spending ahead of progress → trend (spent ÷ progress);
+  // otherwise → spent so far + remaining work at its budgeted cost. Unspent budget is NOT a saving.
+  const forecast=c<=0?Math.max(budget,incurred):(spentPct/100>c+0.0001?incurred/c:incurred+budget*(1-c));
+  const toComplete=c>=1?0:Math.max(forecast-incurred,0), variance=budget-forecast, varOk=completion>=80&&!pc;
+  const byCat=CATS.map(c=>{const pl=rows('BudgetLines',pid).filter(r=>r.category===c).reduce((s,r)=>s+num(r.planned),0);
+    const act=led.filter(r=>r.category===c).reduce((s,r)=>s+num(r.amount),0)+(c==='Labour'?labBal:0);return {c,planned:pl,actual:act,left:pl-act};});
+  const inprog=ms.find(x=>x.status==='In progress'),nextMs=[...ms].filter(x=>x.status!=='Done').sort((a,b)=>String(a.plannedDate||'9').localeCompare(String(b.plannedDate||'9')))[0];
+  const phase=ms.length?(inprog?inprog.title:nextMs?nextMs.title:'All milestones done'):'';
+  const odue=ms.filter(m=>m.status!=='Done'&&m.plannedDate&&m.plannedDate<today()).length;
+  const rv=rows('Revenue',pid), rev=rv.filter(r=>r.kind==='Revenue').reduce((s,r)=>s+num(r.amount),0), opex=rv.filter(r=>r.kind!=='Revenue').reduce((s,r)=>s+num(r.amount),0), noi=rev-opex;
+  let months=1;const rd=rv.filter(r=>r.kind==='Revenue'&&r.date).map(r=>r.date).sort()[0];
+  if(rd){const a=new Date(rd+'T00:00:00'),n=new Date();months=Math.max(1,(n.getFullYear()-a.getFullYear())*12+n.getMonth()-a.getMonth()+1);}
+  const annNoi=rv.length?noi/months*12:0, roi=incurred>0?annNoi/incurred*100:0, payback=annNoi>0?incurred/annNoi:null;
+  const units=num(p.totalUnits), occ=units>0?num(p.occupiedUnits)/units*100:null;
+  return {pc,fees,ledgerFees,fundFees,totalOut,moved,feeRate,varOk,phase,budget,planned,billed,paid,labBal,incurred,outstanding,remaining,committed,transferred,available,gap,shortfall,completion,forecast,toComplete,variance,spentPct,byCat,odue,rev,opex,noi,annNoi,roi,payback,occ,months,hasMs:ms.length>0,lastProg};
+}
+function alertsFor(p,m){
+  const a=[];
+  if(m.budget>0&&m.forecast>m.budget*1.0001)a.push(['er','Forecast cost '+kes(m.forecast)+' exceeds the budget by '+kes(m.forecast-m.budget)+'.']);
+  if(m.budget>0&&m.completion>0&&m.spentPct>m.completion+10)a.push(['wn','Spending ('+pct(m.spentPct)+' of budget) is running ahead of progress ('+pct(m.completion)+' complete).']);
+  if(m.available<0)a.push(['wn','Paid out of pocket: '+kes(-m.available)+' is owed back to whoever paid — reimburse from the family funds.']);
+  else if(m.shortfall>0)a.push(['wn','Site kitty is short: '+kes(m.outstanding)+' is owed but only '+kes(m.available)+' is in the kitty — top it up.']);
+  if(m.moved>0&&m.feeRate>3)a.push(['wn','Transaction costs are '+pct(m.feeRate)+' of the money moved ('+kes(m.fees)+') — fewer, larger transfers cost less.']);
+  if(m.gap>0&&m.budget>0)a.push(['wn','Funding gap: '+kes(m.gap)+' of the budget is not yet covered by committed funding.']);
+  if(m.odue>0)a.push(['wn',m.odue+' milestone'+(m.odue>1?'s are':' is')+' past the planned date.']);
+  return a;
+}
+
+/* ───────── views ───────── */
+const P=()=>db.Projects.find(x=>x.id===V.id);
+let loaded=false;
+function render(){
+  if(!root)return;
+  const b=$('pj-body');if(!b)return;
+  b.innerHTML=V.name==='settings'?settingsView():V.name==='report'?portfolioView():(V.name==='project'&&P()?projectView(P()):listView());
+  setBadge(badge.t,badge.m);
+  clearInterval(window._pjLive);
+  if(V.name==='project'&&V.tab==='overview'){const p=P();if(p&&p.type==='purchase'&&num(p.purchasePrice)>0)window._pjLive=setInterval(()=>{const el=$('pj-live');if(!el){clearInterval(window._pjLive);return;}el.innerHTML=liveBody(p);},1000);}
+}
+function topbar(title,sub,crumb,right){
+  return `<div class="pj-top"><div>${crumb?`<div class="pj-crumb" onclick="PJ.go('list')">← ${crumb}</div>`:''}<h1 class="pj-h1">${title}</h1><div class="pj-sub">${sub||''}</div></div>
+   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${right||''}<span id="pj-badge" class="pj-sync ${badge.t}"><span class="pj-dot"></span><span>${esc(badge.m)}</span></span><button class="pj-b pj-sm" onclick="PJ.syncNow()">⟳ Sync now</button><button class="pj-b pj-sm" onclick="PJ.go('settings')">⚙ Connection</button></div></div>`;
+}
+function listView(){
+  const all=db.Projects, open=all.filter(p=>OPEN.includes(p.status));
+  const ms=open.map(p=>metrics(p)), sum=k=>ms.reduce((s,m)=>s+m[k],0), avg=ms.length?ms.reduce((s,m)=>s+m.completion,0)/ms.length:0;
+  const list=all.filter(p=>V.filter==='All'||(V.filter==='Active'?OPEN.includes(p.status):V.filter==='Completed'?p.status==='Completed':p.status==='Archived'));
+  const chip=f=>`<span class="pj-chip ${V.filter===f?'on':''}" onclick="PJ.filter('${f}')">${f}${f==='All'?'':' ('+all.filter(p=>f==='Active'?OPEN.includes(p.status):f==='Completed'?p.status==='Completed':p.status==='Archived').length+')'}</span>`;
+  return topbar('Projects','Where family money is being deployed to build or develop an asset','','<button class="pj-b" onclick="PJ.report()">📄 Portfolio report</button><button class="pj-b pj-p" onclick="PJ.add(\'Projects\')">+ New project</button>')+
+  `<div class="pj-kp">
+    <div class="pj-k"><div class="pj-kl">Active projects</div><div class="pj-kv">${open.length}</div><div class="pj-ks">${all.length} in total</div></div>
+    <div class="pj-k"><div class="pj-kl">Approved budgets</div><div class="pj-kv">${cmp(sum('budget'))}</div><div class="pj-ks">across active projects</div></div>
+    <div class="pj-k"><div class="pj-kl">Spent to date</div><div class="pj-kv">${cmp(sum('paid'))}</div><div class="pj-ks">${kes(sum('outstanding'))} still owed</div></div>
+    <div class="pj-k"><div class="pj-kl">Average completion</div><div class="pj-kv">${pct(avg)}</div><div class="pj-ks">physical progress</div></div></div>
+  ${settings.url&&settings.token?'':`<div class="pj-al pj-wn">Not connected to a Projects Sheet yet — your records are saved on this device only. <button class="pj-b pj-sm pj-p" onclick="PJ.go('settings')">Connect now</button></div>`}
+  <div class="pj-chips" style="margin-bottom:12px">${['Active','Completed','Archived','All'].map(chip).join('')}</div>
+  ${list.length?`<div class="pj-cards">${list.map(projectCard).join('')}</div>`:`<div class="pj-c pj-empty">No projects here yet. Press “+ New project” to start tracking a build.</div>`}`;
+}
+function projectCard(p){
+  const m=metrics(p),al=alertsFor(p,m),tone=m.forecast>m.budget*1.0001&&m.budget>0?'r':(m.budget>0&&m.spentPct>m.completion+10?'a':'g');
+  return `<div class="pj-pc" onclick="PJ.open('${p.id}')"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><div><div style="font-weight:700">${esc(p.name)}</div><div class="pj-sub">${esc(p.location||'')}</div></div><span class="pj-bdg ${p.status==='Completed'?'pj-ok':''}">${esc(p.status)}</span></div>
+   <div class="pj-sub" style="margin:6px 0">${typeLabel(p)}</div>
+   <div class="pj-row"><span class="pj-m">Budget</span><b>${kes(m.budget)}</b></div><div class="pj-row"><span class="pj-m">Spent (paid)</span><b>${kes(m.paid)}</b></div>
+   <div class="pj-bl" style="display:flex;justify-content:space-between;font-size:12px;margin:8px 0 3px"><span class="pj-m">Budget used ${pct(m.spentPct)}</span><span class="pj-m">Complete ${pct(m.completion)}</span></div>
+   <div class="pj-bar ${tone}"><div style="width:${clamp(m.spentPct,0,100)}%"></div></div>
+   <div class="pj-bar g" style="margin-top:4px"><div style="width:${m.completion}%"></div></div>
+   ${al.length?`<div style="margin-top:8px"><span class="pj-bdg ${al[0][0]==='er'?'pj-er':'pj-wn'}">⚠ ${al.length} alert${al.length>1?'s':''}</span></div>`:''}</div>`;
+}
+const GROUPS=[['overview','Overview',['overview']],['costs','Costs & Site Ledger',['expenses','labour','materials']],['progress','Milestones & Site Log',['milestones','docs']],['fin','Financials & Handover',['budget','revenue','report','handover']]];
+const LEAF={overview:'Overview',expenses:'Ledger',labour:'Labour & contractors',materials:'Materials & equipment',milestones:'Milestones',docs:'Documents & history',budget:'Budget & funding',revenue:'Revenue & performance',report:'Report',handover:'Handover'};
+const leaves=(g,p)=>g[2].filter(l=>l!=='revenue'||p.type==='income');
+const groupOf=t=>GROUPS.find(g=>g[2].includes(t));
+function projectView(p){
+  const m=metrics(p);let grp=groupOf(V.tab);if(!grp||!leaves(grp,p).includes(V.tab)){V.tab='overview';grp=GROUPS[0];}
+  const ls=leaves(grp,p),last=V.last||{};
+  const edit='<button class="pj-b" onclick="PJ.edit(\'Projects\',\''+p.id+'\')">✎ Edit project</button><button class="pj-b pj-d" onclick="PJ.del(\'Projects\',\''+p.id+'\')" title="Delete this project" style="padding:6px 10px">🗑</button>';
+  const kit=m.available<0?['pj-a','Out-of-pocket — reimbursement owed']:(m.outstanding>m.available?['pj-a','Needs a top-up']:['pj-g','Enough for what is owed']);
+  return topbar(esc(p.name),`${typeLabel(p)} · <span class="pj-bdg">${esc(p.status)}</span> · ${esc(p.location||'No location')} · Started ${dlabel(p.startDate)}`,'All projects',edit)+
+  `<div class="pj-kp">
+    <div class="pj-k"><div class="pj-kl">${m.pc?'Deposit target (live)':'Total budget'}</div><div class="pj-kv">${kes(m.budget)}</div><div class="pj-ks">${pct(m.spentPct)} committed${m.planned?'':' · set in Edit project'}</div></div>
+    <div class="pj-k"><div class="pj-kl">Total spent</div><div class="pj-kv">${kes(m.paid)}</div><div class="pj-ks">${kes(m.outstanding)} unpaid${m.fees>0?' · fees '+kes(m.fees):''}</div></div>
+    <div class="pj-k"><div class="pj-kl">Site cash kitty</div><div class="pj-kv ${kit[0]}">${kes(m.available)}</div><div class="pj-ks">${kit[1]}</div></div>
+    <div class="pj-k"><div class="pj-kl">${m.pc?'Deposit progress':'Physical progress'}</div><div class="pj-kv">${pct(m.completion)}</div><div class="pj-ks">${m.lastProg?'logged '+dlabel(m.lastProg.date):(m.phase?esc(m.phase):(m.hasMs?'from milestones':'manual estimate'))}</div></div></div>
+  <div class="pj-tabs">${GROUPS.map(g=>{const lv=leaves(g,p),t=(last[g[0]]&&lv.includes(last[g[0]]))?last[g[0]]:lv[0];return `<div class="pj-tab ${g===grp?'on':''}" onclick="PJ.tab('${t}')">${g[1]}</div>`;}).join('')}</div>
+  ${ls.length>1?`<div class="pj-chips" style="margin-bottom:12px">${ls.map(l=>`<span class="pj-chip ${V.tab===l?'on':''}" onclick="PJ.tab('${l}')">${LEAF[l]}</span>`).join('')}</div>`:''}${tabBody(p,m)}`;
+}
+function liveBody(p){
+  const m=metrics(p),pc=m.pc;if(!pc)return '';
+  const k4=n=>'KES '+num(n).toLocaleString('en-KE',{minimumFractionDigits:4,maximumFractionDigits:4}),g=pc.price-pc.P0,plan=monthsToSecure(p,m.paid);
+  const planTxt=plan===null?'Add a planned monthly deposit (Edit project) to see how long it will take.':plan.months===null?'⚠ At this monthly deposit you will never catch up — the target grows faster than you pay.':`At ${kes(p.monthlyDeposit)} a month you secure the unit in about <b>${plan.months} month${plan.months>1?'s':''}</b> (${dlabel(plan.at.toISOString().slice(0,10))}), when the deposit target will be ${kes(plan.target)}.`;
+  return `<div class="pj-sub">LIVE · ${new Date().toLocaleTimeString('en-KE')} · price started ${dlabel(pc.start)}</div>
+   <div class="pj-kl" style="margin-top:8px">Unit price today</div><div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums">${k4(pc.price)}</div>
+   <div class="pj-cs" style="margin-top:2px">${kes(pc.P0)} at the start · +${kes(g)} (${pct((pc.f-1)*100)}) · ${pct(p.priceGrowth)} a year, compounded ${GROW_LBL[p.growthComp||'monthly']} · grows ≈ ${kes(pc.perDay)} a day</div>
+   <div class="pj-row"><span class="pj-m">${pc.req>0?'Deposit to secure the unit ('+pct(pc.req)+' of today’s price)':'Amount to pay (full price)'}</span><b style="font-variant-numeric:tabular-nums">${k4(pc.target)}</b></div>
+   <div class="pj-row"><span class="pj-m">Paid so far (fees excluded)</span><b>${kes(m.paid)}</b></div>
+   <div class="pj-row"><span><b>${pc.remainSecure>0?'Remaining to secure the unit':'✅ Deposit secured'}</b></span><b class="${pc.remainSecure>0?'pj-a':'pj-g'}" style="font-variant-numeric:tabular-nums">${pc.remainSecure>0?k4(pc.remainSecure):kes(pc.surplus)+' ahead'}</b></div>
+   <div class="pj-row"><span class="pj-m">Remaining on the full price</span><b style="font-variant-numeric:tabular-nums">${k4(pc.remainTotal)}</b></div>
+   <div class="pj-al pj-wn" style="margin:10px 0 0">${planTxt}</div>`;
+}
+/* ───────── overview charts: target vs paid · budget vs spent vs built · revenue vs costs ───────── */
+const mi=m=>+m.slice(0,4)*12+ +m.slice(5,7)-1, mf=i=>Math.floor(i/12)+'-'+String(i%12+1).padStart(2,'0');
+const mlab=m=>new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleString('en-KE',{month:'short',year:'2-digit'});
+const inflRaw=()=>{try{const v=parseFloat(localStorage.getItem('app_inflation'));return isFinite(v)?v:null;}catch(e){return null;}};   // latest annualised inflation saved by the Wealth Registry (same browser / site)
+const hasInfl=()=>inflRaw()!==null;
+const inflNow=()=>inflRaw()||0;
+const PZ={rev:58,tgt:26};
+const zoomBtns=k=>`<span style="display:inline-flex;gap:6px;flex-wrap:wrap"><button class="pj-b pj-sm" onclick="PJ.zoom('${k}',-1)">− Zoom out</button><button class="pj-b pj-sm" onclick="PJ.zoom('${k}',1)">+ Zoom in</button><button class="pj-b pj-sm" onclick="PJ.zoom('${k}',0)">Reset</button></span>`;
+function zoom(k,dir){
+  const def=k==='rev'?58:26,step=k==='rev'?10:6,lo=k==='rev'?24:10,hi=k==='rev'?130:90;
+  PZ[k]=dir===0?def:clamp(PZ[k]+dir*step,lo,hi);
+  const p=P(),el=$('pj-card-'+k);if(!p||!el)return;
+  const m=metrics(p),t=document.createElement('div');t.innerHTML=(k==='rev'?revenueCard(p,m):targetCard(p,m)).trim();el.replaceWith(t.firstChild);
+  const sc=document.querySelector('#pj-card-'+k+' .cz-scroll');if(sc)sc.scrollLeft=sc.scrollWidth;
+}
+const leg=(c,l,dash)=>`<span style="display:inline-flex;align-items:center;gap:6px"><span style="display:inline-block;width:18px;height:0;border-top:3px ${dash?'dashed':'solid'} ${c}"></span>${l}</span>`;
+function chartAxes(W,H,padL,padR,padT,padB,max,fmt){
+  return [0,1,2,3].map(i=>{const v=max*i/3,y=padT+(1-i/3)*(H-padT-padB);return `<line x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" style="stroke:var(--pj-bd)"/><text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end">${fmt(v)}</text>`;}).join('');
+}
+function targetCard(p,m){
+  const pc=m.pc;if(!pc)return '';
+  const led=rows('Ledger',p.id).filter(r=>COUNTED.includes(r.status)&&r.date);
+  const startM=String(p.priceStart||p.startDate||today()).slice(0,7),nowM=today().slice(0,7),nI=mi(nowM);
+  let first=startM;led.forEach(r=>{const k=String(r.date).slice(0,7);if(k<first)first=k;});
+  const D=num(p.monthlyDeposit),ms=monthsToSecure(p,m.paid),a0=mi(first);
+  let endI=ms&&ms.months?nI+ms.months+1:nI+6;endI=Math.min(Math.max(endI,nI+1),a0+119);
+  const inflOn=hasInfl(),ir=inflNow()/100/12,base0=pc.req>0?pc.P0*pc.req/100:pc.P0,sI=mi(startM);
+  const pts=[];
+  for(let i=a0;i<=endI;i++){
+    const mk=mf(i),at=i===nI?new Date():new Date(Math.floor(i/12),i%12+1,0,23,59);
+    const target=purchaseCalc(p,0,at).target;
+    const paid=i<=nI?led.filter(r=>String(r.date).slice(0,7)<=mk).reduce((s,r)=>s+paidOf(r),0):null;
+    const proj=(i>=nI&&D>0)?m.paid+D*(i-nI):null;
+    const inf=(inflOn&&i>=sI)?base0*Math.pow(1+ir,i-sI):null;
+    pts.push({i,mk,target,paid:i===nI?m.paid:paid,proj,inf});
+  }
+  const n=pts.length,W=Math.max(680,n*PZ.tgt+80),H=270,padL=62,padR=18,padT=14,padB=30;
+  const vals=[];pts.forEach(q=>{vals.push(q.target);if(q.paid!=null)vals.push(q.paid);if(q.proj!=null)vals.push(Math.min(q.proj,q.target*1.15));if(q.inf!=null)vals.push(q.inf);});
+  const max=Math.max(...vals,1)*1.08,x=k=>padL+(n>1?k/(n-1):0)*(W-padL-padR),y=v=>padT+(1-v/max)*(H-padT-padB);
+  const path=(f,stop)=>{let d='',pen=false;pts.forEach((q,k)=>{const v=f(q);if(v==null||(stop&&stop(q,k))){pen=false;return;}d+=(pen?'L':'M')+x(k).toFixed(1)+' '+y(v).toFixed(1)+' ';pen=true;});return d;};
+  let crossK=-1;if(D>0)pts.forEach((q,k)=>{if(crossK<0&&q.i>=nI&&q.proj!=null&&q.proj>=q.target)crossK=k;});
+  const projD=path(q=>q.proj,(q,k)=>crossK>-1&&k>crossK);
+  const nowK=pts.findIndex(q=>q.i===nI),step=Math.max(1,Math.ceil(48/((W-padL-padR)/Math.max(n-1,1))));
+  const xl=pts.map((q,k)=>k%step===0?`<text x="${x(k).toFixed(1)}" y="${H-10}" text-anchor="middle">${mlab(q.mk)}</text>`:'').join('');
+  const cross=crossK>-1?`<circle cx="${x(crossK).toFixed(1)}" cy="${y(pts[crossK].target).toFixed(1)}" r="5" fill="#fff" stroke="var(--pj-gr)" stroke-width="2.5"><title>Lines meet around ${mlab(pts[crossK].mk)} — the unit is secured</title></circle><text x="${Math.min(x(crossK),W-70).toFixed(1)}" y="${(y(pts[crossK].target)-10).toFixed(1)}" text-anchor="middle" style="fill:var(--text);font-weight:600">Secure ≈ ${mlab(pts[crossK].mk)}</text>`:'';
+  const prog=pc.target>0?clamp(m.paid/pc.target*100,0,100):0,secured=pc.remainSecure<=0;
+  const foot=secured?`✅ Paid is already above today’s target — the deposit is secured, and you are ${kes(pc.surplus)} ahead.`:ms&&ms.months?`At ${kes(D)} a month the lines meet in about ${ms.months} month${ms.months!==1?'s':''} (${ms.at.toLocaleDateString('en-KE',{month:'long',year:'numeric'})}) — that is when you secure the unit.`:D>0?`At ${kes(D)} a month the deposit never catches the target within 50 years — the price is growing faster than you are paying.`:'Set a planned monthly deposit on the project to see when the lines will meet.';
+  const infTxt=inflOn?` The thin red line is what the target would be if the price had only kept pace with inflation (${inflNow()}% a year) — the gap above it is the price growth beyond inflation.`:'';
+  return `<div class="pj-c" id="pj-card-tgt"><div class="pj-ct">🎯 Target vs paid</div><div class="pj-cs">The target is a moving line — ${pc.req>0?pct(pc.req)+' of a price growing '+pct(p.priceGrowth)+' a year':'the price growing '+pct(p.priceGrowth)+' a year'}. Where your payments cross it, the unit is secured.</div>
+   <div style="display:flex;justify-content:space-between;font-size:12.5px;margin:8px 0 3px"><span>Paid ${kes(m.paid)} of ${kes(pc.target)} target</span><b>${pct(prog)} · ${secured?'secured':kes(pc.remainSecure)+' to go'}</b></div>
+   <div class="pj-bar ${secured?'g':''}"><div style="width:${prog}%"></div></div>
+   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 2px"><div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">${leg('#F5A623','Target (rising)')}${leg('#34C97B','Paid so far')}${D>0?leg('#4F8EF7','Projected deposits',1):''}${inflOn?leg('#F05252','Target if only inflation'):''}</div>${zoomBtns('tgt')}</div>
+   <div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px">${chartAxes(W,H,padL,padR,padT,padB,max,cmp)}
+    ${nowK>-1?`<line x1="${x(nowK).toFixed(1)}" x2="${x(nowK).toFixed(1)}" y1="${padT}" y2="${H-padB}" stroke="#8A94A6" stroke-dasharray="3,3"/><text x="${x(nowK).toFixed(1)}" y="${padT+9}" text-anchor="${nowK>n*0.8?'end':'start'}" dx="${nowK>n*0.8?-4:4}">Today</text>`:''}
+    <path d="${path(q=>q.target)}" fill="none" stroke="#F5A623" stroke-width="2.5"/>
+    ${inflOn?`<path d="${path(q=>q.inf)}" fill="none" stroke="#F05252" stroke-width="1.8"/>`:''}
+    ${projD?`<path d="${projD}" fill="none" stroke="#4F8EF7" stroke-width="2" stroke-dasharray="6,4"/>`:''}
+    <path d="${path(q=>q.paid)}" fill="none" stroke="#34C97B" stroke-width="2.5"/>${cross}${xl}</svg></div>
+   <div class="pj-cs" style="margin:8px 0 0">${foot}${infTxt}</div></div>`;
+}
+function buildCard(p,m,v){
+  const b=m.budget||0,spent=b>0?m.incurred/b*100:0,phys=m.completion;
+  const bars=[['Budget',100,'#8A94A6',b>0?kes(b):'no budget set'],['Spent',spent,spent>phys+10?'#F05252':spent>phys+3?'#F5A623':'#4F8EF7',kes(m.incurred)+' of budget'],['Physical progress',phys,'#34C97B',m.lastProg?'logged '+dlabel(m.lastProg.date):'from milestones']];
+  const W=480,H=210,padL=50,padR=10,padT=22,padB=34,max=Math.max(100,spent,phys)*1.12,gw=(W-padL-padR)/bars.length,bw=Math.min(64,gw*.55),y=val=>padT+(1-val/max)*(H-padT-padB);
+  const g=bars.map((x,i)=>{const cx=padL+gw*i+gw/2,top=y(x[1]);return `<rect x="${(cx-bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(H-padB-top,1).toFixed(1)}" rx="3" fill="${x[2]}"><title>${x[0]}: ${pct(x[1])} — ${x[3]}</title></rect><text x="${cx.toFixed(1)}" y="${(top-5).toFixed(1)}" text-anchor="middle" style="fill:var(--text);font-size:11px">${pct(x[1])}</text><text x="${cx.toFixed(1)}" y="${H-14}" text-anchor="middle">${x[0]}</text>`;}).join('');
+  return `<div class="pj-c"><div class="pj-ct">💰 Budget vs spent vs physical progress</div><div class="pj-cs">Everything as a % of the budget. Spent should never run far ahead of the physical progress you log in Milestones &amp; Site Log (${pct(m.completion)} complete, ${pct(m.spentPct)} of budget used)</div>
+   <svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="max-width:520px">${chartAxes(W,H,padL,padR,padT,padB,max,x=>Math.round(x)+'%')}${g}</svg>
+   <div class="pj-al ${v[0]}" style="margin:10px 0 0">${v[1]}</div></div>`;
+}
+function revenueCard(p,m){
+  const rv=rows('Revenue',p.id).filter(r=>/^\d{4}-\d{2}/.test(r.date||'')),by={};
+  rv.forEach(r=>{const k=String(r.date).slice(0,7);by[k]=by[k]||{rev:0,cost:0};if(r.kind==='Revenue')by[k].rev+=num(r.amount);else by[k].cost+=num(r.amount);});
+  const ks=Object.keys(by).sort();if(!ks.length)return '';
+  const list=[];for(let i=mi(ks[0]);i<=mi(ks[ks.length-1])&&list.length<60;i++){const k=mf(i),q=by[k]||{rev:0,cost:0};list.push({k,rev:q.rev,cost:q.cost,net:q.rev-q.cost});}
+  const W=Math.max(520,list.length*PZ.rev+80),H=250,padL=58,padR=12,padT=18,padB=34;
+  const all=[0];list.forEach(q=>all.push(q.rev,q.cost,q.net));let mx=Math.max(...all),mn=Math.min(...all);if(mx===mn)mx=mn+1;
+  const y=v=>padT+(mx-v)/(mx-mn)*(H-padT-padB),y0=y(0),gw=(W-padL-padR)/list.length,bw=Math.min(20,gw*.32);
+  const grid=[0,1,2,3].map(i=>{const v=mn+(mx-mn)*i/3;return `<line x1="${padL}" x2="${W-padR}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" style="stroke:var(--pj-bd)"/><text x="${padL-6}" y="${(y(v)+3).toFixed(1)}" text-anchor="end">${cmp(v)}</text>`;}).join('');
+  const bars=list.map((q,i)=>{const cx=padL+gw*i+gw/2,r=(v,dx,c,l)=>`<rect x="${(cx+dx).toFixed(1)}" y="${Math.min(y(v),y0).toFixed(1)}" width="${bw}" height="${Math.max(Math.abs(y(v)-y0),1).toFixed(1)}" rx="2" fill="${c}"><title>${mlab(q.k)} ${l}: ${kes(v)}</title></rect>`;return r(q.rev,-bw-1,'#34C97B','revenue')+r(q.cost,1,'#F5A623','costs')+`<text x="${cx.toFixed(1)}" y="${H-14}" text-anchor="middle">${mlab(q.k)}</text>`;}).join('');
+  const netD='M'+list.map((q,i)=>`${(padL+gw*i+gw/2).toFixed(1)},${y(q.net).toFixed(1)}`).join(' L');
+  const dots=list.map((q,i)=>`<circle cx="${(padL+gw*i+gw/2).toFixed(1)}" cy="${y(q.net).toFixed(1)}" r="3" fill="#4F8EF7"><title>${mlab(q.k)} net: ${kes(q.net)}</title></circle>`).join('');
+  const ro=m.incurred>0?m.roi:null,ir=inflNow(),inf=hasInfl()&&ro!==null?` Annualised return on project cost is <b>${pct(ro)}</b> against <b>${ir}%</b> inflation — a real return of <b class="${ro-ir>=0?'pj-g':'pj-r'}">${ro-ir>=0?'+':'−'}${Math.abs(ro-ir).toFixed(1)} %</b>.`:'';
+  return `<div class="pj-c" id="pj-card-rev"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><div class="pj-ct">📈 Monthly revenue vs costs</div><div class="pj-cs">Operating revenue and costs each month, with the net income line</div></div>${zoomBtns('rev')}</div>
+   <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin:8px 0 2px">${leg('#34C97B','Revenue')}${leg('#F5A623','Operating costs')}${leg('#4F8EF7','Net income')}</div>
+   <div class="cz-scroll" style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="width:${W}px;max-width:none;height:${H}px">${grid}<line x1="${padL}" x2="${W-padR}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" style="stroke:var(--border2)"/>${bars}<path d="${netD}" fill="none" stroke="#4F8EF7" stroke-width="2.2"/>${dots}</svg></div>
+   <div class="pj-cs" style="margin:8px 0 0">Net so far ${kes(m.noi)}.${inf}</div></div>`;
+}
+function moneyBar(m){
+  const col=['#4F8EF7','#34C97B','#F5A623','#8B7CF6','#E5577E','#2DB5A8'],act=m.byCat.filter(c=>c.actual>0);
+  if(!act.length||!(m.incurred>0))return '<div class="pj-m">No costs recorded yet.</div>';
+  return `<div style="display:flex;height:12px;border-radius:99px;overflow:hidden;margin:10px 0 9px;background:var(--pj-bd)">${act.map(c=>`<div title="${esc(c.c)}: ${kes(c.actual)} (${pct(c.actual/m.incurred*100)})" style="width:${(c.actual/m.incurred*100).toFixed(2)}%;background:${col[CATS.indexOf(c.c)%col.length]}"></div>`).join('')}</div>
+   <div style="display:flex;flex-wrap:wrap;gap:5px 14px;font-size:12px">${act.map(c=>`<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col[CATS.indexOf(c.c)%col.length]};margin-right:5px"></span>${esc(c.c)} <b>${kes(c.actual)}</b> <span class="pj-m">${pct(c.actual/m.incurred*100)}</span></span>`).join('')}</div>`;
+}
+function purchaseCard(p,m){return `<div class="pj-c"><div class="pj-ct">🏠 Purchase price &amp; balance (live)</div><div class="pj-cs">The price keeps growing from the booking date, so the amount you must reach moves every day</div><div id="pj-live">${liveBody(p)}</div></div>`;}
+function fundCard(m){
+  return `<div class="pj-c"><div class="pj-ct">Funding &amp; site kitty</div><div class="pj-cs">Money sent to the project is a deposit into the kitty; it only becomes an expense when a worker or supplier is paid.</div>
+   <div class="pj-row"><span class="pj-m">Funds allocated (committed)</span><b>${kes(m.committed)}</b></div><div class="pj-row"><span class="pj-m">Transferred to the project</span><b>${kes(m.transferred)}</b></div>
+   <div class="pj-row"><span class="pj-m">Paid out to workers &amp; suppliers</span><b>${kes(m.paid)}</b></div>${m.ledgerFees>0?`<div class="pj-row"><span class="pj-m">Payment fees taken from the kitty</span><b>${kes(m.ledgerFees)}</b></div>`:''}
+   <div class="pj-row"><span class="pj-m">${m.available<0?'Out-of-pocket — reimbursement owed':'Site kitty balance'}</span><b class="${m.available<0?'pj-a':'pj-g'}">${kes(Math.abs(m.available))}</b></div></div>`;
+}
+function actions(ent,extra){return r=>(extra?extra(r):'')+`<button class="pj-b pj-sm" onclick="PJ.edit('${ent}','${r.id}')">✎</button><button class="pj-b pj-sm pj-d" onclick="PJ.del('${ent}','${r.id}')">✕</button>`;}
+function table(cols,list,act,foot,empty){
+  const th=cols.map(c=>`<th class="${c[2]?'pj-n':''}">${c[0]}</th>`).join('')+'<th></th>';
+  const body=list.length?list.map(r=>`<tr>${cols.map(c=>`<td class="${c[2]?'pj-n':''}">${c[1](r)}</td>`).join('')}<td class="pj-act">${act(r)}</td></tr>`).join(''):`<tr><td colspan="${cols.length+1}" class="pj-empty">${empty||'Nothing recorded yet.'}</td></tr>`;
+  return `<div class="pj-tw"><table class="pj-t"><thead><tr>${th}</tr></thead><tbody>${body}</tbody>${foot?`<tfoot><tr>${foot}</tr></tfoot>`:''}</table></div>`;
+}
+function head(title,sub,btn){return `<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:8px"><div><div class="pj-ct">${title}</div><div class="pj-cs" style="margin-bottom:0">${sub||''}</div></div>${btn||''}</div>`;}
+const addBtn=(ent,l)=>`<button class="pj-b pj-p pj-sm" onclick="PJ.add('${ent}')">+ ${l}</button>`;
+function tabBody(p,m){
+  const pid=p.id;
+  if(V.tab==='overview'){
+    const al=alertsFor(p,m);
+    const recent=[...rows('Ledger',pid).map(r=>({d:r.date,t:(r.description||'')+(r.supplier?' — '+r.supplier:''),a:kes(r.amount),k:'tx'})),...rows('Milestones',pid).filter(x=>x.status==='Done').map(r=>({d:r.completedDate||r.plannedDate||'',t:r.title+' completed',a:'',k:'ms'}))].sort((a,b)=>String(b.d).localeCompare(String(a.d))).slice(0,8);
+    const v=(m.completion===0&&m.spentPct<5)?['pj-ok','🟢 Just getting started — nothing to compare yet.']:m.spentPct>m.completion+10?['pj-er','🔴 Spending is running ahead of physical progress.']:m.spentPct>m.completion+3?['pj-wn','🟡 Watch spending — it is slightly ahead of progress.']:['pj-ok','🟢 On track: spending is pacing at or behind physical progress.'];
+    const cats=m.byCat.filter(c=>c.actual>0).map(c=>`<div class="pj-row"><span>${c.c}</span><span><b>${kes(c.actual)}</b> <span class="pj-m">${m.incurred>0?pct(c.actual/m.incurred*100):''}</span></span></div>`).join('');
+    const rev=p.type==='income'?`<div class="pj-c"><div class="pj-ct">Revenue & performance</div>${m.rev||m.opex?`<div class="pj-row"><span class="pj-m">Revenue received</span><b>${kes(m.rev)}</b></div><div class="pj-row"><span class="pj-m">Operating costs</span><b>${kes(m.opex)}</b></div><div class="pj-row"><span class="pj-m">Net operating income</span><b class="${m.noi<0?'pj-r':'pj-g'}">${kes(m.noi)}</b></div>`:'<div class="pj-m">Not generating revenue yet — while building, the spend is capitalised cost; revenue starts after handover.</div>'}</div>`:'';
+    return `${al.map(a=>`<div class="pj-al ${a[0]==='er'?'pj-er':'pj-wn'}">⚠ ${a[1]}</div>`).join('')}${assetCard(p,m)}
+    ${m.pc?targetCard(p,m):''}
+    <div class="pj-grid2">
+     ${m.pc?purchaseCard(p,m):(p.type==='income'&&(m.rev||m.opex)?revenueCard(p,m):buildCard(p,m,v))}
+     <div class="pj-c"><div class="pj-ct">🧱 Where the money is going</div><div class="pj-cs">Costs incurred so far, by category</div>${moneyBar(m)}
+      <div class="pj-row"><span>💸 Transaction costs (fees)</span><span><b>${kes(m.fees)}</b> <span class="pj-m">${m.moved>0?pct(m.feeRate)+' of money moved':''}</span></span></div></div></div>
+    <div class="pj-kp">
+     <div class="pj-k"><div class="pj-kl">Outstanding payments</div><div class="pj-kv ${m.outstanding>0?'pj-a':''}">${kes(m.outstanding)}</div><div class="pj-ks">owed to workers & suppliers</div></div>
+     ${m.pc?`<div class="pj-k"><div class="pj-kl">Remaining on full price</div><div class="pj-kv">${kes(m.pc.remainTotal)}</div><div class="pj-ks">of ${kes(m.pc.price)} today</div></div>`:`<div class="pj-k"><div class="pj-kl">Est. total at completion</div><div class="pj-kv">${kes(m.forecast)}</div><div class="pj-ks">${kes(m.toComplete)} still to spend</div></div>`}
+     <div class="pj-k"><div class="pj-kl">Funding gap</div><div class="pj-kv ${m.gap>0?'pj-a':'pj-g'}">${kes(m.gap)}</div><div class="pj-ks">budget not yet committed</div></div>
+     <div class="pj-k"><div class="pj-kl">Total cash out</div><div class="pj-kv">${kes(m.totalOut)}</div><div class="pj-ks">paid ${kes(m.paid)} + fees ${kes(m.fees)}</div></div>
+     ${m.pc?'':`<div class="pj-k"><div class="pj-kl">Budget variance</div><div class="pj-kv ${m.varOk?(m.variance<0?'pj-r':'pj-g'):'pj-m'}">${m.varOk?kes(m.variance):'—'}</div><div class="pj-ks">${m.varOk?(m.variance<0?'forecast overspend':'forecast saving'):'shown from 80% complete — unspent budget is not a saving'}</div></div>`}
+     ${num(p.estimatedValue)?`<div class="pj-k"><div class="pj-kl">Est. property value</div><div class="pj-kv">${cmp(p.estimatedValue)}</div><div class="pj-ks">${m.totalOut>0?'vs '+cmp(m.totalOut)+' spent':''}</div></div>`:''}</div>
+    ${rev}
+    <div class="pj-c"><div class="pj-ct">Recent activity</div>${recent.length?recent.map(r=>`<div class="pj-row"><span><span class="pj-m">${dlabel(r.d)}</span> · ${r.k==='ms'?'✅ ':''}${esc(r.t)}</span><b>${r.a}</b></div>`).join(''):'<div class="pj-m">No activity yet.</div>'}</div>`;
+  }
+  if(V.tab==='handover'){
+    const cost=Math.round(m.paid+m.fees),linked=(hooks.getAssets&&p.linkedAssetId)?hooks.getAssets().find(a=>a.id===p.linkedAssetId):null,land=linked?num(linked.cost):0,ready=m.completion>=100||p.status==='Completed';
+    if(p.handedOverAt)return `<div class="pj-c"><div class="pj-ct">🎉 Handed over</div><div class="pj-cs">Completed and transferred to Land & Property on ${dlabel(p.handedOverAt)}</div><div class="pj-row"><span class="pj-m">Construction cost capitalised</span><b>${kes(p.capitalisedAmount)}</b></div><div class="pj-row"><span class="pj-m">Asset</span><b>${esc(p.linkedAssetName||'—')}</b></div>${hooks.openAsset&&p.linkedAssetId?`<div style="margin-top:10px"><button class="pj-b" onclick="PJ.openLinked()">Open the asset</button></div>`:''}</div>`;
+    return `<div class="pj-c"><div class="pj-ct">Complete & transfer to Land & Property</div><div class="pj-cs">While a building goes up it earns nothing — the spend is capitalised cost. At handover “${esc(p.name)}” goes into the registry, either added to a plot you already own or as a standalone asset.</div>
+      <div class="pj-row"><span class="pj-m">“${esc(p.name)}” — land ${linked?'(plot: '+esc(linked.name)+', at cost)':'(no plot linked)'}</span><b>${kes(land)}</b></div>
+      <div class="pj-row"><span class="pj-m">“${esc(p.name)}” — construction spent (paid + fees)</span><b>${kes(cost)}</b></div>
+      <div class="pj-row"><span><b>Cost of “${esc(p.name)}” including land</b></span><b>${kes(land+cost)}</b></div>
+      <div style="margin-top:12px">${hooks.createAsset?`<button class="pj-b pj-p" ${ready?'':'disabled style="opacity:.5;cursor:not-allowed"'} onclick="PJ.handover()">🎉 Complete & transfer to Land & Property</button>${ready?'':'<div class="pj-cs" style="margin-top:6px">Available at 100% completion (or when the status is set to Completed).</div>'}`:'<div class="pj-al pj-wn">Open this project from the Wealth Registry (🏗️ Projects) to complete the handover — it adds the asset there.</div>'}</div></div>`;
+  }
+  if(V.tab==='budget'){
+    const bl=rows('BudgetLines',pid),fu=rows('Funding',pid);
+    return `${fundCard(m)}<div class="pj-c">${head('Budget','What the family expects the project to cost',addBtn('BudgetLines','Budget line'))}
+     ${table([['Category',r=>esc(r.category)],['Planned',r=>kes(r.planned),1],['Actual',r=>kes((m.byCat.find(c=>c.c===r.category)||{}).actual||0),1],['Notes',r=>esc(r.notes||'')]],bl,actions('BudgetLines'),`<td>Total planned</td><td class="pj-n">${kes(m.planned)}</td><td class="pj-n">${kes(m.incurred)}</td><td></td><td></td>`,'No budget lines yet.')}
+     ${m.pc?`<div class="pj-cs" style="margin-top:8px">For a purchase project the “Total budget” is the live deposit target (${kes(m.pc.target)} now), not these lines — use them as notes on how you will fund it.</div>`:(num(p.approvedBudget)&&Math.abs(num(p.approvedBudget)-m.planned)>1?`<div class="pj-al pj-wn" style="margin-top:10px">The “Total budget” card uses the <b>approved budget</b> saved in Edit project (${kes(p.approvedBudget)}), not the budget lines above (${kes(m.planned)}) — a difference of ${kes(Math.abs(num(p.approvedBudget)-m.planned))}. It is not calculated by the app. <button class="pj-b pj-sm pj-p" onclick="PJ.matchBudget()">Use the budget-lines total</button></div>`:'')}</div>
+    <div class="pj-c">${head('Funding','Where the money comes from. Funding is not an expense — spending happens when a supplier or worker is paid.',addBtn('Funding','Funding record'))}
+     ${table([['Source',r=>esc(r.source)],['Committed',r=>kes(r.committed),1],['Transferred',r=>kes(r.transferred),1],['Fee',r=>num(r.txCost)?kes(r.txCost):'—',1],['Date',r=>dlabel(r.date)],['Reference',r=>esc(r.reference||'')]],fu,actions('Funding'),`<td>Totals</td><td class="pj-n">${kes(m.committed)}</td><td class="pj-n">${kes(m.transferred)}</td><td class="pj-n">${kes(m.fundFees)}</td><td></td><td></td>`,'No funding recorded yet.')}</div>`;
+  }
+  if(V.tab==='expenses'){
+    const fc=V.cat||'All',list=rows('Ledger',pid).filter(r=>fc==='All'||r.category===fc).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    const BL={'Labour':'Worker / contractor','Construction materials':'Material','Equipment':'Equipment','Professional services':'Professional service','Other / contingency':'Other cost','Purchase payments':'Purchase payment'};
+    const catBtn=fc==='All'?addBtn('Ledger','Transaction'):`<button class="pj-b pj-p pj-sm" onclick="PJ.addCat(${CATS.indexOf(fc)})">+ ${BL[fc]||fc}</button>`;
+    const labStrip=fc==='Labour'?`<div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">${labourStats(pid).length?labourStats(pid).map(x=>`<span class="pj-chip" style="cursor:default">${esc(x.w.worker)} · owed ${kes(x.balance)} <button class="pj-b pj-sm pj-p" onclick="PJ.pay('${x.w.id}')">Pay</button></span>`).join(''):'<span class="pj-m">No workers yet — use “+ Worker / contractor”.</span>'}</div>`:'';
+    const sc=s=>s==='Paid'?'pj-ok':(s==='Rejected'||s==='Cancelled')?'pj-er':s==='Pending Approval'?'pj-wn':'';
+    return `<div class="pj-c">${head('Expenses & payments','One ledger for every project payment — labour, materials, equipment, services and other costs',catBtn)}
+     <div class="pj-chips" style="margin-bottom:10px">${['All'].concat(CATS).map(c=>`<span class="pj-chip ${fc===c?'on':''}" onclick="PJ.cat('${c}')">${c}</span>`).join('')}</div>${labStrip}
+     ${table([['Date',r=>dlabel(r.date)],['Description',r=>esc(r.description)+(r.linkedType?' <span class="pj-bdg">'+r.linkedType+'</span>':'')+(r.receiptUrl?` <a href="${esc(r.receiptUrl)}" target="_blank" rel="noopener" style="color:var(--pj-ac)">🧾</a>`:'')],['Category',r=>esc(r.category)],['Recipient',r=>esc(r.supplier||'')],['Amount',r=>kes(r.amount),1],['Paid',r=>kes(paidOf(r)),1],['Fee',r=>num(r.txCost)?kes(r.txCost):'—',1],['Status',r=>`<span class="pj-bdg ${sc(r.status)}">${esc(r.status)}</span>`]],list,actions('Ledger'),`<td colspan="4">Counted costs (approved / paid)</td><td class="pj-n">${kes(m.billed)}</td><td class="pj-n">${kes(m.paid)}</td><td class="pj-n">${kes(m.ledgerFees)}</td><td></td><td></td>`,'No transactions yet.')}</div>`;
+  }
+  if(V.tab==='materials'){
+    const list=rows('Materials',pid).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    const reg=r=>(r.kind==='Purchased equipment'&&r.registerAsAsset==='Yes')?(hooks.createAsset?(r.registeredAssetId?'<span class="pj-bdg pj-ok">in registry</span>':`<button class="pj-b pj-sm" onclick="PJ.regAsset('${r.id}')">Register asset</button>`):'<span class="pj-bdg">register in Wealth Registry</span>'):'';
+    return `<div class="pj-c">${head('Materials & equipment','Consumables, purchased equipment and rentals. Each purchase also posts to the expense ledger.',addBtn('Materials','Material / equipment'))}
+     ${table([['Item',r=>esc(r.item)+'<div class="pj-sub">'+esc(r.kind)+'</div>'],['Qty',r=>esc(r.qty)+' '+esc(r.unit||''),1],['Unit cost',r=>kes(r.unitCost),1],['Total',r=>kes(num(r.qty)*num(r.unitCost)),1],['Supplier',r=>esc(r.supplier||'')],['Delivery',r=>esc(r.delivery||'—')],['Asset',reg]],list,actions('Materials'),`<td colspan="3">Total</td><td class="pj-n">${kes(list.reduce((s,r)=>s+num(r.qty)*num(r.unitCost),0))}</td><td colspan="4"></td>`,'No materials recorded yet.')}
+     <div class="pj-cs" style="margin-top:8px">Purchased equipment marked “Register as asset” is a cash outflow of the project <i>and</i> a family-owned asset — register it once in the Wealth Registry; the project cost is not counted a second time in net worth.</div></div>`;
+  }
+  if(V.tab==='labour'){
+    const ls=labourStats(pid);
+    return `<div class="pj-c">${head('Labour & contractors','Agreed rate or contract value; payments post to the expense ledger',addBtn('Labour','Worker / contractor'))}
+     ${table([['Worker / contractor',r=>esc(r.w.worker)+'<div class="pj-sub">'+esc(r.w.workCat||'')+'</div>'],['Basis',r=>esc(r.w.basis)+(r.w.basis==='Fixed contract'?'':'<div class="pj-sub">'+kes(r.w.rate)+' × '+esc(r.w.units||0)+'</div>')],['Due',r=>kes(r.due),1],['Paid',r=>kes(r.paid),1],['Balance owed',r=>`<b class="${r.balance>0?'pj-a':'pj-g'}">${kes(r.balance)}</b>`,1]],ls.map(x=>Object.assign({id:x.w.id},x)),actions('Labour',r=>`<button class="pj-b pj-sm pj-p" onclick="PJ.pay('${r.id}')">Pay</button>`),`<td colspan="2">Totals</td><td class="pj-n">${kes(ls.reduce((s,x)=>s+x.due,0))}</td><td class="pj-n">${kes(ls.reduce((s,x)=>s+x.paid,0))}</td><td class="pj-n">${kes(m.labBal)}</td>`,'No workers or contractors yet.')}</div>`;
+  }
+  if(V.tab==='milestones'){
+    const list=rows('Milestones',pid).sort((a,b)=>String(a.plannedDate||'9').localeCompare(String(b.plannedDate||'9')));
+    return `<div class="pj-c">${head('Milestones','Add milestones, then click “% Log progress” on one to record what is actually built on site. The latest logged % is the project’s physical progress.',addBtn('Milestones','Milestone'))}
+     <div class="pj-bar g" style="margin-bottom:12px"><div style="width:${m.completion}%"></div></div>
+     ${table([['Milestone',r=>(r.status==='Done'?'✅ ':'')+esc(r.title)],['Planned',r=>dlabel(r.plannedDate)],['Completed',r=>dlabel(r.completedDate)],['Weight',r=>r.weight?pct(r.weight):'—',1],['Status',r=>`<span class="pj-bdg ${r.status==='Done'?'pj-ok':(r.status!=='Done'&&r.plannedDate&&r.plannedDate<today())?'pj-wn':''}">${esc(r.status)}</span>`]],list,actions('Milestones',r=>`<button class="pj-b pj-sm pj-p" onclick="PJ.logProgress('${r.id}')">% Log progress</button>`),'','No milestones yet — e.g. foundation, walls, roofing, plumbing, final inspection.')}</div>${progressCard(p,m)}`;
+  }
+  if(V.tab==='report')return reportBar()+reportHTML(p,m);
+  if(V.tab==='docs'){
+    const docs=rows('Documents',pid),hist=logs.filter(l=>l.projectId===pid).sort((a,b)=>String(b.timestamp).localeCompare(String(a.timestamp))).slice(0,40);
+    return `<div class="pj-c">${head('Documents','Invoices, contracts, receipts, approvals and plans (links)',addBtn('Documents','Document'))}
+     ${table([['Document',r=>(r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener" style="color:var(--pj-ac)">${esc(r.title)}</a>`:esc(r.title))],['Type',r=>esc(r.docType)],['Date',r=>dlabel(r.date)],['Notes',r=>esc(r.notes||'')]],docs,actions('Documents'),'','No documents yet.')}</div>
+     <div class="pj-c"><div class="pj-ct">History</div><div class="pj-cs">Who changed what and when</div>${hist.length?hist.map(h=>`<div class="pj-row"><span><span class="pj-m">${new Date(h.timestamp).toLocaleString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span> · ${esc(h.action)} <span class="pj-m">${esc(h.details||'')}</span></span><span class="pj-m">${esc(h.actor)}</span></div>`).join(''):'<div class="pj-m">No history yet.</div>'}</div>`;
+  }
+  if(V.tab==='revenue'){
+    const list=rows('Revenue',pid).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    return `<div class="pj-kp">
+     <div class="pj-k"><div class="pj-kl">Revenue received</div><div class="pj-kv">${kes(m.rev)}</div><div class="pj-ks">${num(p.expectedMonthlyRevenue)?'expected '+kes(num(p.expectedMonthlyRevenue))+' / month':''}</div></div>
+     <div class="pj-k"><div class="pj-kl">Operating costs</div><div class="pj-kv">${kes(m.opex)}</div></div>
+     <div class="pj-k"><div class="pj-kl">Net operating income</div><div class="pj-kv ${m.noi<0?'pj-r':'pj-g'}">${kes(m.noi)}</div><div class="pj-ks">${m.months} month${m.months>1?'s':''} of records</div></div>
+     <div class="pj-k"><div class="pj-kl">Return on project cost</div><div class="pj-kv">${m.incurred>0&&list.length?pct(m.roi):'—'}</div><div class="pj-ks">annualised NOI ÷ cost incurred</div></div>
+     <div class="pj-k"><div class="pj-kl">Payback period</div><div class="pj-kv">${m.payback?(Math.round(m.payback*10)/10)+' yrs':'—'}</div><div class="pj-ks">${m.occ!==null?'occupancy '+pct(m.occ):'cost ÷ annual NOI'}</div></div></div>
+     <div class="pj-c">${head('Revenue & operating records','Once the asset starts operating',addBtn('Revenue','Record'))}
+     ${table([['Date',r=>dlabel(r.date)],['Kind',r=>`<span class="pj-bdg ${r.kind==='Revenue'?'pj-ok':'pj-wn'}">${esc(r.kind)}</span>`],['Description',r=>esc(r.description||'')],['Amount',r=>kes(r.amount),1]],list,actions('Revenue'),'','Not generating revenue yet.')}</div>`;
+  }
+  return '';
+}
+function assetCard(p,m){
+  if(p.handedOverAt)return `<div class="pj-al pj-ok">🎉 Handed over to Land & Property: <b>${esc(p.linkedAssetName||'asset')}</b> · construction cost capitalised ${kes(p.capitalisedAmount)}</div>`;
+  const done=(m.completion>=100||p.status==='Completed')?`<div class="pj-al pj-wn">This project is complete. <button class="pj-b pj-sm pj-p" onclick="PJ.tab('handover')">🎉 Go to handover</button></div>`:'';
+  if(p.linkedAssetName)return `<div class="pj-al pj-ok">🏠 Linked asset: <b>${esc(p.linkedAssetName)}</b>${num(p.estimatedValue)?' · estimated value '+kes(p.estimatedValue)+' vs '+kes(m.totalOut)+' spent':''}</div>`+done;
+  return done;
+}
+function reportBar(){return `<div class="pj-top" style="margin-bottom:10px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="pj-b pj-p" onclick="window.print()">⬇ Download PDF</button><span class="pj-m" style="font-size:12px">Choose “Save as PDF” in the print window. The report always shows the latest figures.</span></div></div>`;}
+function portfolioView(){return topbar('Portfolio report','All projects, as at today','All projects','')+reportBar()+portfolioReportHTML();}
+const rrow=(l,v,c)=>`<tr class="${c||''}"><td>${l}</td><td class="n">${v}</td></tr>`;
+function reportHTML(p,m){
+  const pid=p.id,led=rows('Ledger',pid).sort((a,b)=>String(b.date).localeCompare(String(a.date))),lab=labourStats(pid),mat=rows('Materials',pid),ms=rows('Milestones',pid).sort((a,b)=>String(a.plannedDate||'9').localeCompare(String(b.plannedDate||'9'))),al=alertsFor(p,m);
+  const bills=led.filter(r=>COUNTED.includes(r.status)&&num(r.amount)-paidOf(r)>0.5);
+  const owed=lab.filter(x=>x.balance>0.5).map(x=>[x.w.worker+' (labour)',x.balance]).concat(bills.map(r=>[(r.description||'')+(r.supplier?' — '+r.supplier:''),num(r.amount)-paidOf(r)]));
+  const cap=60,shown=led.slice(0,cap);
+  return `<div id="pj-report" class="pj-rpt"><div class="h">PROJECT STATUS REPORT — ${esc(p.name).toUpperCase()}</div>
+   <div class="sb mu">Wealth Registry — Projects · Prepared ${dlabel(today())} · Private &amp; confidential</div>
+   <table class="info"><tr><td><b>Type:</b> ${typeLabel(p)}</td><td><b>Status:</b> ${esc(p.status)}</td></tr>
+    <tr><td><b>Location:</b> ${esc(p.location||'—')}</td><td><b>Period:</b> ${dlabel(p.startDate)} – ${dlabel(today())} (to date)</td></tr>
+    <tr><td><b>Target completion:</b> ${dlabel(p.endDate)}</td><td><b>Linked asset:</b> ${esc(p.linkedAssetName||'—')}</td></tr></table>
+   <div class="sec">1. Summary</div><table>
+    ${rrow('Approved budget',kes(m.budget))}${rrow('Costs incurred (paid + owed)',kes(m.incurred))}${rrow('Paid to date',kes(m.paid))}${rrow('Transaction costs (fees)',kes(m.fees)+(m.moved>0?' ('+pct(m.feeRate)+' of money moved)':''))}${rrow('Total cash out (paid + fees)',kes(m.totalOut))}${rrow('Outstanding payments',kes(m.outstanding))}
+    ${rrow('Remaining budget',kes(m.remaining),'tot')}${rrow('Funding committed / transferred',kes(m.committed)+' / '+kes(m.transferred))}${rrow('Unused funds',kes(m.available))}${rrow('Funding gap (budget not yet committed)',kes(m.gap))}
+    ${rrow('Physical completion',pct(m.completion)+(m.hasMs?' (from milestones)':' (manual estimate)'))}${rrow('Estimated total at completion',kes(m.forecast))}${rrow('Estimated cost to complete',kes(m.toComplete))}
+    ${rrow('Budget variance',m.varOk?kes(m.variance)+(m.variance<0?' (forecast overspend)':' (forecast saving)'):'Shown once the project is 80% complete','tot')}${num(p.estimatedValue)?rrow('Current estimated property value',kes(p.estimatedValue)):''}</table>
+   ${al.length?`<div class="box"><b>Attention points</b><br>${al.map(a=>'• '+a[1]).join('<br>')}</div>`:''}
+   ${m.pc?`<div class="sec">Purchase calculator (as at ${dlabel(today())})</div><table>${rrow('Price at the start ('+dlabel(m.pc.start)+')',kes(m.pc.P0))}${rrow('Price today (+'+pct(p.priceGrowth)+' a year, compounded '+GROW_LBL[p.growthComp||'monthly']+')',kes(m.pc.price))}${rrow(m.pc.req>0?'Deposit needed to secure the unit ('+pct(m.pc.req)+')':'Amount to pay',kes(m.pc.target))}${rrow('Paid so far',kes(m.paid))}${rrow(m.pc.remainSecure>0?'Remaining to secure the unit':'Deposit secured — ahead by',kes(m.pc.remainSecure>0?m.pc.remainSecure:m.pc.surplus),'tot')}${rrow('Remaining on the full price',kes(m.pc.remainTotal))}</table>`:''}
+   <div class="sec">2. Budget vs actual by category</div><table><tr><th>Category</th><th class="n">Planned</th><th class="n">Actual</th><th class="n">Remaining</th><th class="n">Used</th></tr>
+    ${m.byCat.filter(c=>c.planned||c.actual).map(c=>`<tr><td>${c.c}</td><td class="n">${kes(c.planned)}</td><td class="n">${kes(c.actual)}</td><td class="n">${kes(c.left)}</td><td class="n">${c.planned>0?pct(c.actual/c.planned*100):'—'}</td></tr>`).join('')||'<tr><td colspan="5" class="mu">No budget lines.</td></tr>'}
+    <tr class="tot"><td>Total</td><td class="n">${kes(m.planned)}</td><td class="n">${kes(m.incurred)}</td><td class="n">${kes(m.planned-m.incurred)}</td><td class="n">${m.planned>0?pct(m.incurred/m.planned*100):'—'}</td></tr></table>
+   <div class="sec">3. Outstanding payments</div><table>${owed.length?owed.map(o=>`<tr><td>${esc(o[0])}</td><td class="n">${kes(o[1])}</td></tr>`).join('')+rrow('Total owed',kes(m.outstanding),'tot'):'<tr><td class="mu">Nothing owed.</td></tr>'}</table>
+   <div class="sec">4. Funding</div><table><tr><th>Source</th><th class="n">Committed</th><th class="n">Transferred</th><th class="n">Fee</th><th>Date</th></tr>${rows('Funding',pid).map(r=>`<tr><td>${esc(r.source)}</td><td class="n">${kes(r.committed)}</td><td class="n">${kes(r.transferred)}</td><td class="n">${kes(r.txCost)}</td><td>${dlabel(r.date)}</td></tr>`).join('')||'<tr><td colspan="5" class="mu">No funding recorded.</td></tr>'}</table>
+   <div class="sec">5. Expenditure ledger</div><table><tr><th>Date</th><th>Description</th><th>Category</th><th class="n">Amount</th><th class="n">Paid</th><th class="n">Fee</th><th>Status</th></tr>
+    ${shown.map(r=>`<tr><td>${dlabel(r.date)}</td><td>${esc(r.description)}${r.supplier?' — '+esc(r.supplier):''}</td><td>${esc(r.category)}</td><td class="n">${kes(r.amount)}</td><td class="n">${kes(paidOf(r))}</td><td class="n">${num(r.txCost)?kes(r.txCost):'—'}</td><td>${esc(r.status)}</td></tr>`).join('')||'<tr><td colspan="7" class="mu">No transactions.</td></tr>'}
+    <tr class="tot"><td colspan="3">Counted costs (approved / paid)</td><td class="n">${kes(m.billed)}</td><td class="n">${kes(m.paid)}</td><td class="n">${kes(m.ledgerFees)}</td><td></td></tr></table>${led.length>cap?`<div class="mu" style="font-size:10.5px">Showing the latest ${cap} of ${led.length} transactions.</div>`:''}
+   ${lab.length?`<div class="sec">6. Labour &amp; contractors</div><table><tr><th>Worker / contractor</th><th>Basis</th><th class="n">Due</th><th class="n">Paid</th><th class="n">Balance</th></tr>${lab.map(x=>`<tr><td>${esc(x.w.worker)}${x.w.workCat?' — '+esc(x.w.workCat):''}</td><td>${esc(x.w.basis)}</td><td class="n">${kes(x.due)}</td><td class="n">${kes(x.paid)}</td><td class="n">${kes(x.balance)}</td></tr>`).join('')}</table>`:''}
+   ${mat.length?`<div class="sec">7. Materials &amp; equipment</div><table><tr><th>Item</th><th>Type</th><th class="n">Qty</th><th class="n">Total</th><th>Supplier</th><th>Delivery</th></tr>${mat.map(r=>`<tr><td>${esc(r.item)}</td><td>${esc(r.kind)}</td><td class="n">${esc(r.qty)} ${esc(r.unit||'')}</td><td class="n">${kes(num(r.qty)*num(r.unitCost))}</td><td>${esc(r.supplier||'')}</td><td>${esc(r.delivery||'')}</td></tr>`).join('')}</table>`:''}
+   <div class="sec">8. Milestones &amp; progress — ${pct(m.completion)} complete</div><table><tr><th>Milestone</th><th>Planned</th><th>Completed</th><th class="n">Weight</th><th>Status</th></tr>${ms.map(r=>`<tr><td>${esc(r.title)}</td><td>${dlabel(r.plannedDate)}</td><td>${dlabel(r.completedDate)}</td><td class="n">${r.weight?pct(r.weight):'—'}</td><td>${esc(r.status)}</td></tr>`).join('')||'<tr><td colspan="5" class="mu">No milestones recorded.</td></tr>'}</table>
+   ${p.type==='income'?`<div class="sec">9. Revenue &amp; performance</div><table>${m.rev||m.opex?rrow('Revenue received',kes(m.rev))+rrow('Operating costs',kes(m.opex))+rrow('Net operating income',kes(m.noi),'tot')+rrow('Return on project cost (annualised)',m.incurred>0?pct(m.roi):'—')+rrow('Payback period',m.payback?(Math.round(m.payback*10)/10)+' years':'—')+(m.occ!==null?rrow('Occupancy / units sold',pct(m.occ)):''):'<tr><td class="mu">Not generating revenue yet.</td></tr>'}</table>`:''}
+   <div class="note mu">Prepared from the family Projects records as at ${dlabel(today())}. Costs incurred = payments made plus amounts agreed but not yet paid. Forecast = costs incurred ÷ completion. Not formal accounting or tax advice.</div></div>`;
+}
+function portfolioReportHTML(){
+  const list=db.Projects.filter(p=>p.status!=='Archived'),ms=list.map(p=>({p,m:metrics(p)})),sum=k=>ms.reduce((s,x)=>s+x.m[k],0);
+  return `<div id="pj-report" class="pj-rpt"><div class="h">PROJECTS PORTFOLIO REPORT</div><div class="sb mu">Wealth Registry — Projects · As at ${dlabel(today())} · Private &amp; confidential</div>
+   <table><tr><th>Project</th><th>Status</th><th class="n">Budget</th><th class="n">Paid</th><th class="n">Owed</th><th class="n">Remaining</th><th class="n">Complete</th><th class="n">Variance</th></tr>
+   ${ms.map(({p,m})=>`<tr><td>${esc(p.name)}<div class="mu" style="font-size:10px">${typeLabel(p)}</div></td><td>${esc(p.status)}</td><td class="n">${kes(m.budget)}</td><td class="n">${kes(m.paid)}</td><td class="n">${kes(m.outstanding)}</td><td class="n">${kes(m.remaining)}</td><td class="n">${pct(m.completion)}</td><td class="n">${m.varOk?kes(m.variance):'—'}</td></tr>`).join('')||'<tr><td colspan="8" class="mu">No projects.</td></tr>'}
+   <tr class="tot"><td colspan="2">Totals</td><td class="n">${kes(sum('budget'))}</td><td class="n">${kes(sum('paid'))}</td><td class="n">${kes(sum('outstanding'))}</td><td class="n">${kes(sum('remaining'))}</td><td class="n">${ms.length?pct(ms.reduce((s,x)=>s+x.m.completion,0)/ms.length):'—'}</td><td class="n">${kes(ms.filter(x=>x.m.varOk).reduce((t,x)=>t+x.m.variance,0))}</td></tr></table>
+   ${(()=>{const a=ms.filter(x=>alertsFor(x.p,x.m).length);return a.length?`<div class="sec">Attention points</div>${a.map(x=>`<div class="box"><b>${esc(x.p.name)}</b><br>${alertsFor(x.p,x.m).map(y=>'• '+y[1]).join('<br>')}</div>`).join('')}`:'';})()}
+   <div class="note mu">Variance = approved budget − estimated total at completion (negative = forecast overspend); shown only for projects 80% or more complete. Completion is the simple average across the projects shown. Not formal accounting or tax advice.</div></div>`;
+}
+function settingsView(){
+  return topbar('Connection','Projects has its own Google Sheet — use the same URL and token in every app that uses it','<span></span>'.replace('<span></span>','All projects'))+
+  `<div class="pj-c" style="max-width:560px"><div class="pj-fg"><div class="pj-f w"><label>Projects Web App URL</label><input id="pjs-url" value="${esc(settings.url)}" placeholder="https://script.google.com/macros/s/…/exec"></div>
+   <div class="pj-f w"><label>Token</label><input id="pjs-token" type="password" value="${esc(settings.token)}"></div>
+   <div class="pj-f w"><label>Your name (shown in History)</label><input id="pjs-actor" value="${esc(settings.actor)}" placeholder="e.g. Jane"></div></div>
+   <div class="pj-mf" style="justify-content:flex-start;flex-wrap:wrap"><button class="pj-b pj-p" onclick="PJ.saveConn()">Save &amp; test</button><button class="pj-b" onclick="PJ.pull({force:true})">⟳ Pull latest</button><button class="pj-b" onclick="PJ.testLink()">🔗 Open test link</button></div><div class="pj-cs" style="margin-top:8px">The test link opens your Web App in a new tab. A healthy one shows text beginning <b>{"data":</b>. A Google sign-in page, “unable to open file” or “Script function not found” means the deployment needs fixing; <b>{"error":"unauthorized"}</b> means the token differs from TOKEN in the script.</div>
+   <div class="pj-cs" style="margin-top:10px">Data is also kept on this device, so you can work with a weak signal and it syncs when you save.</div></div>`;
+}
+
+/* ───────── forms ───────── */
+function openForm(ent,id,pre){
+  const E=ENT[ent],rec=id?db[ent].find(r=>r.id===id):Object.assign({},pre||{});if(id&&!rec)return;
+  F={ent,id,pre:pre||{}};
+  const def=(k)=>{if(rec[k]!==undefined)return rec[k];
+    if(k==='date')return today();if(k==='status')return ent==='Milestones'?'Planned':(ent==='Projects'?'Planning':'Paid');
+    if(k==='type')return 'personal';if(k==='kind')return ent==='Revenue'?'Revenue':'Consumable material';
+    if(k==='recordedBy')return settings.actor||'';if(k==='growthComp')return 'monthly';if(k==='category'&&ent==='Ledger'&&P()&&P().type==='purchase')return 'Purchase payments';if(k==='delivery')return 'Delivered';if(k==='basis')return 'Daily';return '';};
+  const inputs=E.f.map(([k,l,t,req,o])=>{
+    let v=k==='linkedAsset'?(rec.linkedAssetId||''):def(k),h;
+    if(t==='select'){h=`<select id="pjf-${k}">${(o||[]).map(x=>{const val=Array.isArray(x)?x[0]:x,lab=Array.isArray(x)?x[1]:x;return `<option value="${esc(val)}"${String(v)===String(val)?' selected':''}>${esc(lab)}</option>`;}).join('')}</select>`;}
+    else if(t==='asset'){h=hooks.getAssets?`<select id="pjf-${k}"><option value="">— none —</option>${hooks.getAssets().map(a=>`<option value="${esc(a.id)}"${a.id===v?' selected':''}>${esc(a.name)}</option>`).join('')}</select>`:`<input id="pjf-${k}" value="${esc(rec.linkedAssetName||'')}" placeholder="Asset name (optional)">`;}
+    else if(t==='area'){h=`<textarea id="pjf-${k}">${esc(v)}</textarea>`;}
+    else{h=`<input id="pjf-${k}" type="${t==='num'?'number':t==='date'?'date':'text'}"${t==='num'?' step="any" inputmode="decimal"':''} value="${esc(v)}">`;}
+    return `<div class="pj-f ${t==='area'||t==='asset'||k==='description'||k==='notes'||k==='source'||k==='title'||k==='name'?'w':''}"><label>${l}${req?' *':''}</label>${h}</div>`;}).join('');
+  $('pj-modal').innerHTML=`<div class="pj-ov"><div class="pj-mo"><div class="pj-mt">${id?'Edit':'Add'} ${E.n}</div><div class="pj-fg">${inputs}</div><div class="pj-err" id="pj-err"></div><div class="pj-mf"><button class="pj-b" onclick="PJ.closeForm()">Cancel</button><button class="pj-b pj-p" onclick="PJ.saveForm()">Save</button></div></div></div>`;
+}
+function closeForm(){F=null;const m=$('pj-modal');if(m)m.innerHTML='';}
+function ledgerFor(link,pid){return db.Ledger.find(r=>r.linkedType===link.t&&r.linkedId===link.id&&r.projectId===pid);}
+function saveForm(){
+  if(!F)return;const E=ENT[F.ent],rec={};let bad='';
+  E.f.forEach(([k,l,t,req])=>{const el=$('pjf-'+k);let v=el?el.value.trim():'';if(t==='num')v=v===''?'':num(v);if(req&&(v===''||v==null)&&!bad)bad=l+' is required';rec[k]=v;});
+  if(bad){$('pj-err').textContent=bad;return;}
+  if(F.ent==='Progress'&&(num(rec.pct)<0||num(rec.pct)>100)){$('pj-err').textContent='Progress must be between 0 and 100%';return;}
+  const ent=F.ent,old=F.id?db[ent]&&db[ent].find(r=>r.id===F.id):null,pid=ent==='Projects'?(old?old.id:uid()):(V.id);
+  if(ent==='LabourPay'){
+    const w=db.Labour.find(r=>r.id===F.pre.workerId);
+    db.Ledger.push({id:uid(),projectId:pid,date:rec.date,category:'Labour',description:'Payment — '+w.worker,amount:num(rec.amount),txCost:num(rec.txCost),supplier:w.worker,payMethod:rec.payMethod,status:'Paid',amountPaid:num(rec.amount),receiptUrl:rec.receiptUrl,recordedBy:settings.actor||'',linkedType:'labour',linkedId:w.id,createdAt:new Date().toISOString()});
+    closeForm();commit('Paid labour',pid,w.worker+' '+kes(rec.amount));return;
+  }
+  if(ent==='Projects'){
+    if(hooks.getAssets){const id=rec.linkedAsset;rec.linkedAssetId=id;rec.linkedAssetName=(hooks.getAssets().find(a=>a.id===id)||{}).name||'';}else{rec.linkedAssetName=rec.linkedAsset;rec.linkedAssetId=old?old.linkedAssetId||'':'';}
+    delete rec.linkedAsset;
+  }
+  if((ent==='Ledger'||ent==='Materials')){
+    const total=ent==='Ledger'?num(rec.amount):num(rec.qty)*num(rec.unitCost);
+    if(rec.status==='Paid'&&!num(rec.amountPaid))rec.amountPaid=total;
+    if(rec.status==='Partially Paid'&&!(num(rec.amountPaid)>0)){$('pj-err').textContent='Enter the amount paid so far';return;}
+    if(num(rec.amountPaid)>total+0.5){$('pj-err').textContent='Amount paid cannot exceed the amount';return;}
+    if(rec.status==='Pending Approval'||rec.status==='Approved'||rec.status==='Rejected'||rec.status==='Cancelled')rec.amountPaid=rec.status==='Approved'?num(rec.amountPaid):0;
+  }
+  const row=Object.assign({},old||{},rec,{id:old?old.id:uid(),createdAt:old?old.createdAt:new Date().toISOString()});
+  if(ent!=='Projects')row.projectId=old?old.projectId:pid; else row.id=pid;
+  if(ent==='Milestones'&&row.status==='Done'&&!row.completedDate)row.completedDate=today();
+  if(ent==='Progress'&&F.pre&&F.pre.milestoneId&&!old){row.milestoneId=F.pre.milestoneId;const mm=db.Milestones.find(x=>x.id===row.milestoneId);if(mm&&mm.status==='Planned'&&num(row.pct)>0)mm.status='In progress';}
+  if(old)db[ent][db[ent].indexOf(old)]=row;else db[ent].push(row);
+  if(ent==='Materials'){ // mirror the purchase into the shared ledger
+    const cat=row.kind==='Consumable material'?CATS[1]:CATS[2],tot=num(row.qty)*num(row.unitCost);
+    let l=ledgerFor({t:'material',id:row.id},row.projectId);
+    const data={date:row.date||today(),category:cat,description:row.item+(row.kind==='Rented equipment'?' (rental)':''),amount:tot,txCost:num(row.txCost),supplier:row.supplier,status:row.status,amountPaid:num(row.amountPaid),recordedBy:settings.actor||'',linkedType:'material',linkedId:row.id};
+    if(l)Object.assign(l,data);else db.Ledger.push(Object.assign({id:uid(),projectId:row.projectId,createdAt:new Date().toISOString()},data));
+  }
+  closeForm();
+  const nm={Projects:row.name,BudgetLines:row.category,Funding:row.source,Ledger:row.description,Labour:row.worker,Materials:row.item,Milestones:row.title,Documents:row.title,Revenue:row.description,Progress:pct(row.pct)};
+  if(ent==='Projects'&&!old){V.name='project';V.id=row.id;V.tab='overview';}
+  commit((old?'Edited ':'Added ')+E.n,row.projectId||row.id,nm[ent]||'');
+}
+let DEL=null;
+function delAsk(id){
+  const p=db.Projects.find(x=>x.id===id);if(!p)return;DEL=id;
+  const n=COLS.filter(c=>c!=='Projects').reduce((s,c)=>s+db[c].filter(x=>x.projectId===id).length,0);
+  $('pj-modal').innerHTML=`<div class="pj-ov"><div class="pj-mo"><div class="pj-mt">Delete “${esc(p.name)}”?</div>
+   <div class="pj-cs">This permanently deletes the project and its ${n} record${n!==1?'s':''} (budget, funding, ledger, labour, materials, milestones, progress log, documents, revenue). It cannot be undone.</div>
+   <div class="pj-f w"><label>Type the project name <b>${esc(p.name)}</b> to confirm</label><input id="pj-delname" autocomplete="off" oninput="PJ.delCheck()" placeholder="${esc(p.name)}"></div>
+   <div class="pj-mf"><button class="pj-b" onclick="PJ.closeForm()">Cancel</button><button class="pj-b pj-d" id="pj-delgo" disabled style="opacity:.5;cursor:not-allowed" onclick="PJ.delGo()">Delete project</button></div></div></div>`;
+  const el=$('pj-delname');if(el&&el.focus)el.focus();
+}
+function delMatch(){const p=db.Projects.find(x=>x.id===DEL),el=$('pj-delname');return !!(p&&el&&el.value.trim().toLowerCase()===String(p.name).trim().toLowerCase());}
+function delCheck(){const b=$('pj-delgo');if(!b)return;const ok=delMatch();b.disabled=!ok;b.style.opacity=ok?1:.5;b.style.cursor=ok?'pointer':'not-allowed';}
+function delGo(){
+  if(!DEL||!delMatch())return;const id=DEL,p=db.Projects.find(x=>x.id===id);DEL=null;
+  COLS.forEach(c=>{if(c!=='Projects')db[c]=db[c].filter(x=>x.projectId!==id);});
+  db.Projects=db.Projects.filter(x=>x.id!==id);V.name='list';V.id=null;closeForm();
+  commit('Deleted project',id,p.name);
+}
+function del(ent,id){
+  const r=db[ent].find(x=>x.id===id);if(!r)return;
+  if(ent==='Projects'){delAsk(id);return;}   // deleting a whole project needs its name typed in
+  if(!confirm('Delete this '+ENT[ent].n+'? This cannot be undone.'))return;
+  db[ent]=db[ent].filter(x=>x.id!==id);
+  if(ent==='Materials')db.Ledger=db.Ledger.filter(x=>!(x.linkedType==='material'&&x.linkedId===id));
+  if(ent==='Labour')db.Ledger=db.Ledger.filter(x=>!(x.linkedType==='labour'&&x.linkedId===id));
+  commit('Deleted '+ENT[ent].n,r.projectId,r.title||r.item||r.worker||r.description||r.source||r.category||'');
+}
+
+/* ───────── handover: link to an existing plot or register standalone, with time-value-of-money valuation ───────── */
+let HO=null;
+function hoCalc(){
+  if(!HO)return null;
+  const as=hooks.getAssets?hooks.getAssets():[],a=as.find(x=>x.id===HO.assetId);
+  if(HO.mode!=='link'||!a)return null;
+  const yrs=a.date?Math.max((Date.now()-new Date(a.date+'T00:00:00'))/(365.25*86400000),0):0,r=num(HO.rate)/100;
+  const fv=a.cost*Math.pow(1+r,yrs),base=HO.method==='B'?fv:a.value;
+  return {a,yrs,fv,base,newMV:base+HO.cost,basis:a.cost+HO.cost};
+}
+function hoOpen(){
+  const p=P();if(!p||p.handedOverAt||!hooks.createAsset)return;
+  const m=metrics(p),cost=Math.round(m.paid+m.fees),as=hooks.getAssets?hooks.getAssets():[];
+  const has=p.linkedAssetId&&as.find(a=>a.id===p.linkedAssetId);
+  HO={mode:(has||as.length)?'link':'new',assetId:has?p.linkedAssetId:(as[0]?as[0].id:''),method:'A',rate:hooks.rate?hooks.rate():10,value:num(p.estimatedValue)||cost,cost};
+  hoRender();
+}
+function hoSet(k,v){if(!HO)return;HO[k]=(k==='rate'||k==='value')?num(v):v;hoRender();}
+function hoClose(){HO=null;const m=$('pj-modal');if(m)m.innerHTML='';}
+function hoRender(){
+  const p=P();if(!p||!HO)return;
+  const as=hooks.getAssets?hooks.getAssets():[],c=hoCalc(),K=HO.cost,rowx=(l,v,b)=>`<div class="pj-row"><span class="${b?'':'pj-m'}">${b?'<b>'+l+'</b>':l}</span>${b?'<b>'+v+'</b>':v}</div>`;
+  let body='';
+  if(HO.mode==='link'&&c){
+    const yr=c.a.date?c.a.date.slice(0,4):'?';
+    body=`<div class="pj-f w" style="margin:8px 0 0"><label>Valuation method</label>
+       <label style="display:block;font-weight:400;margin:4px 0"><input type="radio" name="hom2" ${HO.method==='A'?'checked':''} onchange="PJ.hoSet('method','A')"> <b>A · Market value baseline</b> <span class="pj-m">(recommended) — today’s market value of the land + construction cost</span></label>
+       <label style="display:block;font-weight:400;margin:4px 0"><input type="radio" name="hom2" ${HO.method==='B'?'checked':''} onchange="PJ.hoSet('method','B')"> <b>B · Historical cost compounded</b> <span class="pj-m">— land purchase cost grown at a yearly rate over the years held + construction</span></label>
+       ${HO.method==='B'?`<div style="margin-top:6px"><label>Yearly growth / inflation rate (%)</label><input type="number" step="any" value="${HO.rate}" onchange="PJ.hoSet('rate',this.value)" style="max-width:140px"> ${c.a.date?'':'<span class="pj-m">⚠ this plot has no acquisition date — years held counted as 0</span>'}</div>`:''}</div>
+      <div class="pj-c" style="margin:12px 0 0;padding:12px"><div class="pj-ct" style="font-size:13px">1 · Market value update (net worth impact)</div>
+       ${HO.method==='A'?rowx('Land current market value',kes(c.a.value)):rowx('Land cost '+kes(c.a.cost)+' compounded '+c.yrs.toFixed(1)+' yrs @ '+HO.rate+'%',kes(c.fv))}
+       ${rowx('Value added by construction','+ '+kes(K))}${rowx('➜ New estimated market value',kes(c.newMV),1)}</div>
+      <div class="pj-c" style="margin:10px 0 0;padding:12px"><div class="pj-ct" style="font-size:13px">2 · Tax cost basis (for KRA capital gains records)</div>
+       ${rowx('Original land purchase ('+yr+')',kes(c.a.cost))}${rowx('Capitalised improvements ('+new Date().getFullYear()+')','+ '+kes(K))}${rowx('➜ Adjusted tax cost basis',kes(c.basis),1)}</div>`;
+  }else if(HO.mode==='new'){
+    body=`<div class="pj-f w" style="margin:8px 0 0"><label>Estimated market value of “${esc(p.name)}” (KES) — or an appraised value</label><input type="number" step="any" value="${HO.value}" onchange="PJ.hoSet('value',this.value)" style="max-width:220px"></div>
+      <div class="pj-c" style="margin:12px 0 0;padding:12px"><div class="pj-ct" style="font-size:13px">New entry in Land & Property</div>
+       ${rowx('Name',esc(p.name))}${rowx('Acquisition cost (construction spent)',kes(K))}${rowx('Estimated market value',kes(HO.value))}</div>`;
+  }
+  $('pj-modal').innerHTML=`<div class="pj-ov"><div class="pj-mo" style="max-width:660px"><div class="pj-mt">${HO.mode==='link'&&c?'Handover: add “'+esc(p.name)+'” to “'+esc(c.a.name)+'”?':'Handover: register “'+esc(p.name)+'” as a standalone asset?'}</div>
+    <div class="pj-f w"><label>Where does “${esc(p.name)}” go?</label>
+     <label style="display:block;font-weight:400;margin:4px 0;${as.length?'':'opacity:.5'}"><input type="radio" name="hom" ${HO.mode==='link'?'checked':''} ${as.length?'':'disabled'} onchange="PJ.hoSet('mode','link')"> Link to an existing plot ${HO.mode==='link'&&as.length?`<select onchange="PJ.hoSet('assetId',this.value)" style="margin-left:6px">${as.map(a=>`<option value="${esc(a.id)}"${a.id===HO.assetId?' selected':''}>${esc(a.name)}</option>`).join('')}</select>`:''}</label>
+     <label style="display:block;font-weight:400;margin:4px 0"><input type="radio" name="hom" ${HO.mode==='new'?'checked':''} onchange="PJ.hoSet('mode','new')"> Register as an independent, standalone asset</label></div>
+    <div class="pj-cs" style="margin:10px 0 0">💡 <b>Rule of thumb:</b> can it be sold, mortgaged or transferred without selling the land it sits on? <b>No</b> (fence, borehole, extension, renovation, site works) → link it to the plot. <b>Yes</b> (a separately titled unit, a new plot, detachable heavy equipment, an independent business) → register it as a standalone asset.</div>
+    ${body}<div class="pj-mf"><button class="pj-b" onclick="PJ.hoClose()">Cancel</button><button class="pj-b pj-p" onclick="PJ.hoConfirm()">🎉 Complete & transfer</button></div></div></div>`;
+}
+async function hoConfirm(){
+  const p=P();if(!p||!HO||!hooks.createAsset)return;const K=HO.cost,c=hoCalc();
+  if(HO.mode==='link'){
+    if(!c||!hooks.capitalise)return;
+    await hooks.capitalise(c.a.id,K,'Construction completed: '+p.name,{marketValue:c.newMV,method:HO.method,rate:HO.rate});
+    p.linkedAssetId=c.a.id;p.linkedAssetName=c.a.name;
+  }else{
+    const aid=await hooks.createAsset({name:p.name,type:'Other',cost:K,value:HO.value||K,date:p.startDate,location:p.location,notes:'Created from project: '+p.name,use:p.type==='income'?'Income-generating':'Personal use'});
+    p.linkedAssetId=aid;p.linkedAssetName=p.name;
+  }
+  p.status='Completed';p.capitalisedAmount=K;p.handedOverAt=today();hoClose();
+  commit('Completed & transferred to Land & Property',p.id,kes(K));
+}
+function addCat(i){
+  if(!V.id)return;const c=CATS[i];
+  if(c==='Labour')openForm('Labour');
+  else if(c==='Construction materials')openForm('Materials',null,{kind:'Consumable material'});
+  else if(c==='Equipment')openForm('Materials',null,{kind:'Purchased equipment'});
+  else openForm('Ledger',null,{category:c});
+}
+function logProgress(id){if(V.id)openForm('Progress',null,{milestoneId:id||''});}
+function progressCard(p,m){
+  const list=rows('Progress',p.id).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.createdAt).localeCompare(String(b.createdAt))),ms=rows('Milestones',p.id);
+  let chart='';
+  if(list.length){
+    const W=640,H=210,padL=46,padR=20,padT=14,padB=34,T=r=>new Date(r.date+'T00:00:00').getTime();
+    let t0=Math.min(...list.map(T)),t1=Math.max(...list.map(T));if(t1-t0<86400000*6){t0-=86400000*3;t1+=86400000*3;}
+    const x=t=>padL+(t-t0)/(t1-t0)*(W-padL-padR),y=v=>padT+(1-v/100)*(H-padT-padB);
+    const grid=[0,25,50,75,100].map(v=>`<line x1="${padL}" x2="${W-padR}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" style="stroke:var(--pj-bd)"/><text x="${padL-6}" y="${(y(v)+3).toFixed(1)}" text-anchor="end">${v}%</text>`).join('');
+    const d=list.map((r,i)=>(i?'L':'M')+x(T(r)).toFixed(1)+' '+y(num(r.pct)).toFixed(1)).join(' ');
+    const dots=list.map(r=>`<circle cx="${x(T(r)).toFixed(1)}" cy="${y(num(r.pct)).toFixed(1)}" r="4" fill="#34C97B"><title>${dlabel(r.date)}: ${pct(r.pct)}${r.notes?' — '+esc(r.notes):''}</title></circle>`).join('');
+    const xl=[t0,(t0+t1)/2,t1].map(t=>`<text x="${x(t).toFixed(1)}" y="${H-12}" text-anchor="middle">${new Date(t).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'2-digit'})}</text>`).join('');
+    chart=`<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" class="svg-fit" style="min-width:420px">${grid}<path d="${d}" fill="none" stroke="#34C97B" stroke-width="2.4"/>${dots}${xl}</svg></div>`;
+  }
+  return `<div class="pj-c">${head('Physical progress over time','Manual log of what is actually built on site. The latest entry is the project’s physical progress.',addBtn('Progress','Progress entry'))}${chart}
+   ${table([['Date',r=>dlabel(r.date)],['Progress',r=>pct(r.pct),1],['Milestone',r=>esc((ms.find(x=>x.id===r.milestoneId)||{}).title||'—')],['Notes',r=>esc(r.notes||'')]],list.slice().reverse(),actions('Progress'),'','No progress logged yet — click “% Log progress” on a milestone, or + Progress entry.')}</div>`;
+}
+async function regAsset(id){
+  const m=db.Materials.find(x=>x.id===id),p=P();if(!m||!hooks.createAsset)return;
+  const aid=await hooks.createAsset({name:m.item,type:'Other',cost:num(m.qty)*num(m.unitCost),value:num(m.qty)*num(m.unitCost),date:m.date,notes:'Registered from project: '+(p?p.name:''),use:'Project equipment'});
+  m.registeredAssetId=aid;commit('Registered equipment as asset',m.projectId,m.item);
+}
+/* ───────── public API ───────── */
+const api={
+  mount(el,h){root=el;hooks=h||{};loadLocal();loaded=true;
+    root.innerHTML='<div class="pj"><div id="pj-body"></div><div id="pj-modal"></div></div>';
+    render();if(settings.url&&settings.token)pull({silent:true});},
+  zoom,go(v){V.name=v;if(v==='list')V.id=null;render();},
+  filter(f){V.filter=f;render();},
+  open(id){V.name='project';V.id=id;V.tab='overview';V.cat='All';render();},
+  tab(t){V.tab=t;const g=groupOf(t);if(g){V.last=V.last||{};V.last[g[0]]=t;}render();},cat(c){V.cat=c;render();},
+  add(ent){if(ent!=='Projects'&&!V.id)return;openForm(ent);},
+  edit(ent,id){openForm(ent,id);},del,delCheck,delGo,closeForm,saveForm,
+  pay(id){openForm('LabourPay',null,{workerId:id});},
+  report(){V.name='report';render();},testLink(){const u=($('pjs-url').value||settings.url).trim(),t=($('pjs-token').value||settings.token).trim();if(!u){alert('Paste the Web App URL first.');return;}window.open(u+(u.indexOf('?')>-1?'&':'?')+'token='+encodeURIComponent(t),'_blank');},
+  async syncNow(){
+    if(!settings.url||!settings.token){alert('Connect to your Projects Sheet first.');V.name='settings';render();return;}
+    setBadge('warn','Syncing…');await push();const ok=await pull({force:false});if(ok)setBadge('ok','Synced just now');
+  },
+  handover:hoOpen,hoSet,hoConfirm,hoClose,addCat,logProgress,
+  linked(aid){
+    if(!loaded){loadLocal();loaded=true;}
+    return db.Projects.filter(p=>p.linkedAssetId===aid).map(p=>{const m=metrics(p);return {id:p.id,name:p.name,status:p.status,handed:!!p.handedOverAt,handedOverAt:p.handedOverAt||'',capitalised:num(p.capitalisedAmount),spent:Math.round(m.paid+m.fees),completion:m.completion};});
+  },
+  openLinked(){const p=P();if(p&&hooks.openAsset&&p.linkedAssetId)hooks.openAsset(p.linkedAssetId);},
+  feeSummary(year){
+    if(!loaded){loadLocal();loaded=true;}
+    const y=String(year||''),inY=d=>!y||String(d||'').slice(0,4)===y;
+    const led=db.Ledger.filter(r=>r.status!=='Rejected'&&r.status!=='Cancelled'),fu=db.Funding;
+    const fy=led.filter(r=>inY(r.date)).reduce((s,r)=>s+num(r.txCost),0)+fu.filter(r=>inY(r.date)).reduce((s,r)=>s+num(r.txCost),0);
+    const my=led.filter(r=>inY(r.date)&&COUNTED.includes(r.status)).reduce((s,r)=>s+paidOf(r),0)+fu.filter(r=>inY(r.date)).reduce((s,r)=>s+num(r.transferred),0);
+    const fa=led.reduce((s,r)=>s+num(r.txCost),0)+fu.reduce((s,r)=>s+num(r.txCost),0);
+    return {fees:fy,moved:my,feesAll:fa};
+  },
+  matchBudget(){const p=P();if(!p)return;const t=rows('BudgetLines',p.id).reduce((s,r)=>s+num(r.planned),0);if(!t)return;p.approvedBudget=t;commit('Matched approved budget to budget lines',p.id,kes(t));},
+  regAsset,pull,push,
+  saveConn(){settings.url=$('pjs-url').value.trim();settings.token=$('pjs-token').value.trim();settings.actor=$('pjs-actor').value.trim();saveSettings();pull({force:false}).then(ok=>{if(ok)alert('Connected ✓');});},
+  hasAssetHook(){return !!hooks.createAsset;},
+  _db:()=>db,_metrics:metrics,_state:()=>({V,settings})
+};
+return api;
+})();
+
+PJ.mount(document.getElementById('pj-root'),{});
+</script></body></html>
