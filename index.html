@@ -4560,7 +4560,7 @@ function projectCard(p){
    <div class="pj-bar g" style="margin-top:4px"><div style="width:${m.completion}%"></div></div>
    ${al.length?`<div style="margin-top:8px"><span class="pj-bdg ${al[0][0]==='er'?'pj-er':'pj-wn'}">⚠ ${al.length} alert${al.length>1?'s':''}</span></div>`:''}</div>`;
 }
-const GROUPS=[['overview','Overview',['overview']],['costs','Costs & Site Ledger',['expenses','labour','materials']],['progress','Milestones & Site Log',['milestones','docs']],['fin','Financials & Handover',['budget','revenue','report','handover']]];
+const GROUPS=[['overview','Overview',['overview']],['costs','Costs & Site Ledger',['expenses']],['progress','Milestones & Site Log',['milestones','docs']],['fin','Financials & Handover',['budget','revenue','report','handover']]];
 const LEAF={overview:'Overview',expenses:'Ledger',labour:'Labour & contractors',materials:'Materials & equipment',milestones:'Milestones',docs:'Documents & history',budget:'Budget & funding',revenue:'Revenue & performance',report:'Report',handover:'Handover'};
 const leaves=(g,p)=>g[2].filter(l=>l!=='revenue'||p.type==='income');
 const groupOf=t=>GROUPS.find(g=>g[2].includes(t));
@@ -4699,6 +4699,15 @@ function table(cols,list,act,foot,empty){
 }
 function head(title,sub,btn){return `<div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:8px"><div><div class="pj-ct">${title}</div><div class="pj-cs" style="margin-bottom:0">${sub||''}</div></div>${btn||''}</div>`;}
 const addBtn=(ent,l)=>`<button class="pj-b pj-p pj-sm" onclick="PJ.add('${ent}')">+ ${l}</button>`;
+function labourReg(pid,m){
+  const ls=labourStats(pid);
+  return table([['Worker / contractor',r=>esc(r.w.worker)+'<div class="pj-sub">'+esc(r.w.workCat||'')+'</div>'],['Basis',r=>esc(r.w.basis)+(r.w.basis==='Fixed contract'?'':'<div class="pj-sub">'+kes(r.w.rate)+' × '+esc(r.w.units||0)+'</div>')],['Due',r=>kes(r.due),1],['Paid',r=>kes(r.paid),1],['Balance owed',r=>`<b class="${r.balance>0?'pj-a':'pj-g'}">${kes(r.balance)}</b>`,1]],ls.map(x=>Object.assign({id:x.w.id},x)),actions('Labour',r=>`<button class="pj-b pj-sm pj-p" onclick="PJ.pay('${r.id}')">Pay</button>`),`<td colspan="2">Totals</td><td class="pj-n">${kes(ls.reduce((s,x)=>s+x.due,0))}</td><td class="pj-n">${kes(ls.reduce((s,x)=>s+x.paid,0))}</td><td class="pj-n">${kes(m.labBal)}</td>`,'No workers or contractors yet — use “+ Worker / contractor”.');
+}
+function matReg(pid,keep){
+  const list=rows('Materials',pid).filter(keep).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const reg=r=>(r.kind==='Purchased equipment'&&r.registerAsAsset==='Yes')?(hooks.createAsset?(r.registeredAssetId?'<span class="pj-bdg pj-ok">in registry</span>':`<button class="pj-b pj-sm" onclick="PJ.regAsset('${r.id}')">Register asset</button>`):'<span class="pj-bdg">register in Wealth Registry</span>'):'';
+  return table([['Item',r=>esc(r.item)+'<div class="pj-sub">'+esc(r.kind)+'</div>'],['Qty',r=>esc(r.qty)+' '+esc(r.unit||''),1],['Unit cost',r=>kes(r.unitCost),1],['Total',r=>kes(num(r.qty)*num(r.unitCost)),1],['Supplier',r=>esc(r.supplier||'')],['Delivery',r=>esc(r.delivery||'—')],['Asset',reg]],list,actions('Materials'),`<td colspan="3">Total</td><td class="pj-n">${kes(list.reduce((s,r)=>s+num(r.qty)*num(r.unitCost),0))}</td><td colspan="4"></td>`,'Nothing recorded yet — use the + button above.');
+}
 function tabBody(p,m){
   const pid=p.id;
   if(V.tab==='overview'){
@@ -4745,10 +4754,11 @@ function tabBody(p,m){
     const BL={'Labour':'Worker / contractor','Construction materials':'Material','Equipment':'Equipment','Professional services':'Professional service','Other / contingency':'Other cost','Purchase payments':'Purchase payment'};
     const catBtn=fc==='All'?addBtn('Ledger','Transaction'):`<button class="pj-b pj-p pj-sm" onclick="PJ.addCat(${CATS.indexOf(fc)})">+ ${BL[fc]||fc}</button>`;
     const labStrip=fc==='Labour'?`<div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">${labourStats(pid).length?labourStats(pid).map(x=>`<span class="pj-chip" style="cursor:default">${esc(x.w.worker)} · owed ${kes(x.balance)} <button class="pj-b pj-sm pj-p" onclick="PJ.pay('${x.w.id}')">Pay</button></span>`).join(''):'<span class="pj-m">No workers yet — use “+ Worker / contractor”.</span>'}</div>`:'';
+    const regBlock=fc==='Labour'?`<div class="pj-ct" style="font-size:13px;margin:18px 0 6px">Workers & contractors</div>${labourReg(pid,m)}`:(fc==='Construction materials'||fc==='Equipment')?`<div class="pj-ct" style="font-size:13px;margin:18px 0 6px">${fc==='Equipment'?'Equipment register':'Materials register'}</div>${matReg(pid,r=>(r.kind==='Consumable material')===(fc==='Construction materials'))}`:'';
     const sc=s=>s==='Paid'?'pj-ok':(s==='Rejected'||s==='Cancelled')?'pj-er':s==='Pending Approval'?'pj-wn':'';
-    return `<div class="pj-c">${head('Expenses & payments','One ledger for every project payment — labour, materials, equipment, services and other costs',catBtn)}
-     <div class="pj-chips" style="margin-bottom:10px">${['All'].concat(CATS).map(c=>`<span class="pj-chip ${fc===c?'on':''}" onclick="PJ.cat('${c}')">${c}</span>`).join('')}</div>${labStrip}
-     ${table([['Date',r=>dlabel(r.date)],['Description',r=>esc(r.description)+(r.linkedType?' <span class="pj-bdg">'+r.linkedType+'</span>':'')+(r.receiptUrl?` <a href="${esc(r.receiptUrl)}" target="_blank" rel="noopener" style="color:var(--pj-ac)">🧾</a>`:'')],['Category',r=>esc(r.category)],['Recipient',r=>esc(r.supplier||'')],['Amount',r=>kes(r.amount),1],['Paid',r=>kes(paidOf(r)),1],['Fee',r=>num(r.txCost)?kes(r.txCost):'—',1],['Status',r=>`<span class="pj-bdg ${sc(r.status)}">${esc(r.status)}</span>`]],list,actions('Ledger'),`<td colspan="4">Counted costs (approved / paid)</td><td class="pj-n">${kes(m.billed)}</td><td class="pj-n">${kes(m.paid)}</td><td class="pj-n">${kes(m.ledgerFees)}</td><td></td><td></td>`,'No transactions yet.')}</div>`;
+    return `<div class="pj-c">${head('Expenses & payments','One ledger for every project payment. Pick a category to record it with its own form — workers, materials and equipment registers appear right below',catBtn)}
+     <div class="pj-chips" style="margin-bottom:10px">${['All'].concat(CATS).map(c=>`<span class="pj-chip ${fc===c?'on':''}" onclick="PJ.cat('${c}')">${c}</span>`).join('')}</div>
+     ${table([['Date',r=>dlabel(r.date)],['Description',r=>esc(r.description)+(r.linkedType?' <span class="pj-bdg">'+r.linkedType+'</span>':'')+(r.receiptUrl?` <a href="${esc(r.receiptUrl)}" target="_blank" rel="noopener" style="color:var(--pj-ac)">🧾</a>`:'')],['Category',r=>esc(r.category)],['Recipient',r=>esc(r.supplier||'')],['Amount',r=>kes(r.amount),1],['Paid',r=>kes(paidOf(r)),1],['Fee',r=>num(r.txCost)?kes(r.txCost):'—',1],['Status',r=>`<span class="pj-bdg ${sc(r.status)}">${esc(r.status)}</span>`]],list,actions('Ledger'),`<td colspan="4">Counted costs (approved / paid)</td><td class="pj-n">${kes(m.billed)}</td><td class="pj-n">${kes(m.paid)}</td><td class="pj-n">${kes(m.ledgerFees)}</td><td></td><td></td>`,'No transactions yet.')}${regBlock}</div>`;
   }
   if(V.tab==='materials'){
     const list=rows('Materials',pid).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
@@ -5027,7 +5037,7 @@ const api={
   zoom,go(v){V.name=v;if(v==='list')V.id=null;render();},
   filter(f){V.filter=f;render();},
   open(id){V.name='project';V.id=id;V.tab='overview';V.cat='All';render();},
-  tab(t){V.tab=t;const g=groupOf(t);if(g){V.last=V.last||{};V.last[g[0]]=t;}render();},cat(c){V.cat=c;render();},
+  tab(t){if(t==='labour'){V.cat='Labour';t='expenses';}else if(t==='materials'){V.cat='Construction materials';t='expenses';}V.tab=t;const g=groupOf(t);if(g){V.last=V.last||{};V.last[g[0]]=t;}render();},cat(c){V.cat=c;render();},
   add(ent){if(ent!=='Projects'&&!V.id)return;openForm(ent);},
   edit(ent,id){openForm(ent,id);},del,delCheck,delGo,closeForm,saveForm,
   pay(id){openForm('LabourPay',null,{workerId:id});},
